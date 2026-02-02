@@ -27,8 +27,9 @@
                     style="font-size: 2.5rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 0.5rem; color: #4B3621;">
                     Olá, {{ user.first_name }}
                 </h1>
-                                <p style="color: #78350F; max-width: 700px; font-weight: 500;">
-                    Gestão ativa da unidade <strong style="color: #B45309;">{{ user.establishment.name|default:"Geral" }}</strong>. Você tem <strong style="color: #B45309; background: rgba(255,255,255,0.5); padding: 0 4px; border-radius: 2px;">{{ stats.pending_orders|default:"0" }} distribuições</strong> pendentes hoje.
+                <p style="color: #78350F; max-width: 700px; font-weight: 500;">
+                    Gestão ativa da unidade <strong style="color: #B45309;">{{ user.establishment.name|default:"Geral" }}</strong>. Você tem <strong
+                        style="color: #B45309; background: rgba(255,255,255,0.5); padding: 0 4px; border-radius: 2px;">{{ stats.pending_orders|default:"0" }} distribuições</strong> pendentes hoje.
                 </p>
 
                 <div class="flex gap-3 mt-6">
@@ -55,7 +56,8 @@
 <div style="display: grid; grid-template-columns: repeat(3, 1fr) 1.5fr; gap: 1rem;">
 
     <!-- Stat 1 -->
-    <div class="card p-4 hover-lift stats-card" style="border-left: 2px solid var(--primary);">
+    <a href="{% url 'product_list' %}" class="card p-4 hover-lift stats-card"
+        style="border-left: 2px solid var(--primary); text-decoration: none; color: inherit; display: block;">
         <div class="flex justify-between items-start mb-2">
             <span class="label">Produtos Ativos</span>
             <i data-lucide="package" style="color: var(--primary); width: 16px; opacity: 0.7;"></i>
@@ -63,7 +65,7 @@
         <div class="stats-value" style="font-size: 1.75rem; font-weight: 800;">{{ stats.products_count }}</div>
         <div style="font-size: 0.75rem; color: var(--success); font-weight: 600;">+2.4% <span
                 style="color: #999; font-weight: 400;">vs mês passado</span></div>
-    </div>
+    </a>
 
     <!-- Stat 2 -->
     <div class="card p-4 hover-lift stats-card" style="border-left: 2px solid #DC2626;">
@@ -114,7 +116,7 @@
                 Todas →</a>
         </div>
 
-        <div style="max-height: 240px; overflow-y: auto; overflow-x: hidden;">
+        <div style="overflow-x: hidden;">
             <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
                 <tbody>
                     {% for order in recent_orders|slice:":3" %}

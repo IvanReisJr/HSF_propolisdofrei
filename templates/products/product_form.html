@@ -1,9 +1,13 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 
 {% block title %}{% if is_edit %}Editar Produto{% else %}Novo Produto{% endif %} - Própolis do Frei{% endblock %}
 
 {% block breadcrumbs %}
-<span style="color: #a3a3a3;">Início / Produtos / </span> <span style="font-weight: 600;">{% if is_edit %}Editar{% else %}Novo{% endif %}</span>
+<a href="{% url 'dashboard' %}" class="hover:text-primary transition-colors"
+    style="color: #a3a3a3; text-decoration: none;">Início</a> <span style="color: #a3a3a3;"> / </span> <a
+    href="{% url 'product_list' %}" class="hover:text-primary transition-colors"
+    style="color: #a3a3a3; text-decoration: none;">Produtos</a> <span style="color: #a3a3a3;"> / </span> <span
+    style="font-weight: 600;">{% if is_edit %}Editar{% else %}Novo{% endif %}</span>
 {% endblock %}
 
 {% block content %}
@@ -21,14 +25,17 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
             <div class="flex-col gap-2">
                 <label class="label">Nome do Produto</label>
-                <input type="text" name="name" value="{{ product.name }}" class="input" placeholder="Ex: Própolis 30ml" required>
+                <input type="text" name="name" value="{{ product.name }}" class="input" placeholder="Ex: Própolis 30ml"
+                    required>
             </div>
             <div class="flex-col gap-2">
                 <label class="label">Código Único</label>
                 {% if is_edit %}
-                <input type="text" name="code" value="{{ product.code }}" class="input" placeholder="Ex: PRO30" required>
+                <input type="text" name="code" value="{{ product.code }}" class="input" placeholder="Ex: PRO30"
+                    required>
                 {% else %}
-                <input type="text" value="{{ next_code }}" class="input" disabled style="background: #f3f4f6; color: #666;">
+                <input type="text" value="{{ next_code }}" class="input" disabled
+                    style="background: #f3f4f6; color: #666;">
                 <p style="font-size: 0.75rem; color: #666; margin-top: 0.25rem;">Código gerado automaticamente</p>
                 {% endif %}
             </div>
@@ -40,7 +47,8 @@
                 <select name="category" class="input" required>
                     <option value="">Selecione...</option>
                     {% for cat in categories %}
-                    <option value="{{ cat.id }}" {% if product.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                    <option value="{{ cat.id }}" {% if product.category_id == cat.id %}selected{% endif %}>{{ cat.name }}
+                    </option>
                     {% endfor %}
                 </select>
             </div>
@@ -65,19 +73,23 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem;">
             <div class="flex-col gap-2">
                 <label class="label">Preço de Custo (R$)</label>
-                <input type="number" step="0.01" name="cost_price" value="{{ product.cost_price|stringformat:'.2f'|default:'0.00' }}" class="input" required>
+                <input type="number" step="0.01" name="cost_price"
+                    value="{{ product.cost_price|stringformat:'.2f'|default:'0.00' }}" class="input" required>
             </div>
             <div class="flex-col gap-2">
                 <label class="label">Preço de Venda (R$)</label>
-                <input type="number" step="0.01" name="sale_price" value="{{ product.sale_price|stringformat:'.2f'|default:'0.00' }}" class="input" required>
+                <input type="number" step="0.01" name="sale_price"
+                    value="{{ product.sale_price|stringformat:'.2f'|default:'0.00' }}" class="input" required>
             </div>
             <div class="flex-col gap-2">
                 <label class="label">Estoque Mínimo</label>
-                <input type="number" name="min_stock" value="{{ product.min_stock|default:'10' }}" class="input" required>
+                <input type="number" name="min_stock" value="{{ product.min_stock|default:'10' }}" class="input"
+                    required>
             </div>
         </div>
 
-        <div class="flex justify-end gap-3" style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-top: 1rem;">
+        <div class="flex justify-end gap-3"
+            style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-top: 1rem;">
             <a href="{% url 'product_list' %}" class="btn btn-outline">Cancelar</a>
             <button type="submit" class="btn btn-primary">
                 <i data-lucide="save"></i> Salvar Produto

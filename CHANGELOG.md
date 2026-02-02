@@ -34,8 +34,12 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - Gap entre cartões de ação reduzido de `gap-4` para `gap-2`
   - Altura da tabela de distribuições alterada de `40vh` para `240px`
   - Reestruturação de layout: "Distribuições Recentes" e Cards de Ação lado a lado (2 colunas)
-  - "Distribuições Recentes" limitada a exibir os 3 primeiros itens
+  - "Distribuições Recentes" limitada a 5 itens visíveis (com scroll para até 50) e altura ajustada para 400px
+  - "Distribuições Recentes" estritamente limitada a 3 itens (sem scroll)
+  - Lista de "Produtos" limitada a 4 linhas visíveis (320px) com cabeçalho fixo e scroll
+  - Lista de "Pedidos de Distribuição" limitada a 5 linhas visíveis (400px) com cabeçalho fixo e scroll
   - Divider cartões "Inventário Rápido" e "Relatórios" em linha 50/50 na coluna da direita
+  - Ajuste global de layout: `app-container` com altura fixa (100vh) para evitar corte de conteúdo e habilitar scroll interno correto
 - Filtros de status na lista de pedidos agora usam query parameters (`?status=...`)
 - Estilo visual das abas ativas nos filtros (cor primária + borda inferior)
 

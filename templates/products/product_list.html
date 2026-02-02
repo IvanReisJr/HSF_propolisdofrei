@@ -1,9 +1,9 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 
 {% block title %}Produtos - Própolis do Frei{% endblock %}
 
 {% block breadcrumbs %}
-<span style="color: #a3a3a3;">Início / </span> <span style="font-weight: 600;">Produtos</span>
+<a href="{% url 'dashboard' %}" class="hover:text-primary transition-colors" style="color: #a3a3a3; text-decoration: none;">Início</a> <span style="color: #a3a3a3;"> / </span> <span style="font-weight: 600;">Produtos</span>
 {% endblock %}
 
 {% block content %}
@@ -44,10 +44,10 @@
     </div>
 
     <!-- Products Table -->
-    <div class="card">
+    <div class="card" style="max-height: 320px; overflow-y: auto; overflow-x: hidden;">
         <table style="width: 100%; border-collapse: collapse;">
             <thead>
-                <tr style="border-bottom: 1px solid var(--border); text-align: left;">
+                <tr style="border-bottom: 1px solid var(--border); text-align: left; position: sticky; top: 0; background: white; z-index: 10;">
                     <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Código</th>
                     <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Nome</th>
                     <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Categoria</th>

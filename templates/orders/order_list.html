@@ -30,10 +30,11 @@
             style="{% if status_filter == 'cancelado' %}color: var(--primary); font-weight: 600; border-bottom: 2px solid var(--primary);{% else %}color: #666; font-weight: 500;{% endif %} padding-bottom: 0.5rem; cursor: pointer; text-decoration: none;">Cancelados</a>
     </div>
 
-    <div class="card">
+    <div class="card" style="max-height: 400px; overflow-y: auto; overflow-x: hidden;">
         <table style="width: 100%; border-collapse: collapse;">
             <thead>
-                <tr style="border-bottom: 1px solid var(--border); text-align: left;">
+                <tr
+                    style="border-bottom: 1px solid var(--border); text-align: left; position: sticky; top: 0; background: white; z-index: 10;">
                     <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Nº Pedido</th>
                     <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Data</th>
                     <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Distribuidor</th>
