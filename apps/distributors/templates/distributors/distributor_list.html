@@ -1,0 +1,72 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Distribuidores - Própolis do Frei{% endblock %}
+
+{% block breadcrumbs %}
+<span style="color: #a3a3a3;">Cadastros / </span> <span style="font-weight: 600; color: var(--primary);">Distribuidores</span>
+{% endblock %}
+
+{% block content %}
+<div class="flex-col gap-6 animate-enter">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 style="font-size: 1.875rem; font-weight: 800; color: #4B3621;">Distribuidores</h1>
+            <p style="color: #78350F;">Gestão de distribuidores e parceiros.</p>
+        </div>
+        <a href="{% url 'distributor_create' %}" class="btn btn-primary hover-lift hover-glow">
+            <i data-lucide="plus"></i> Novo Distribuidor
+        </a>
+    </div>
+
+    <div class="card p-0 overflow-hidden">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #2C1810; color: #F3E5AB;">
+                    <th style="padding: 1rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Código</th>
+                    <th style="padding: 1rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Nome</th>
+                    <th style="padding: 1rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Contato</th>
+                    <th style="padding: 1rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Cidade/UF</th>
+                    <th style="padding: 1rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Status</th>
+                    <th style="padding: 1rem; text-align: right; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for distributor in distributors %}
+                <tr style="border-bottom: 1px solid #E5E5E5;" class="hover-bg-gray-50">
+                    <td style="padding: 1rem; font-family: monospace; color: #78350F;">{{ distributor.code }}</td>
+                    <td style="padding: 1rem; font-weight: 600; color: #4B3621;">{{ distributor.name }}</td>
+                    <td style="padding: 1rem; font-size: 0.8125rem;">
+                        <div class="flex-col gap-1">
+                            <span class="flex items-center gap-2" style="color: #4B3621;"><i data-lucide="phone" style="width: 12px;"></i> {{ distributor.phone|default:"---" }}</span>
+                            <span class="flex items-center gap-2" style="color: #666;"><i data-lucide="mail" style="width: 12px;"></i> {{ distributor.email|default:"---" }}</span>
+                        </div>
+                    </td>
+                    <td style="padding: 1rem; color: #666;">
+                        {% if distributor.city %}{{ distributor.city }}{% if distributor.state %} / {{ distributor.state }}{% endif %}{% else %}-{% endif %}
+                    </td>
+                    <td style="padding: 1rem;">
+                        {% if distributor.is_active %}
+                        <span style="background: #D1FAE5; color: #065F46; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Ativo</span>
+                        {% else %}
+                        <span style="background: #FEE2E2; color: #991B1B; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Inativa</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1rem; text-align: right;">
+                        <a href="{% url 'distributor_edit' distributor.pk %}" class="btn btn-sm btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                            <i data-lucide="edit-2" style="width: 14px;"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="padding: 3rem; text-align: center; color: #a3a3a3;">
+                        <i data-lucide="users" style="width: 32px; height: 32px; opacity: 0.3; margin-bottom: 0.5rem;"></i>
+                        <p>Nenhum distribuidor cadastrado.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

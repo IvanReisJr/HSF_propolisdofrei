@@ -1,0 +1,44 @@
+# Própolis do Frei - AI Context
+
+> This file provides context for LLMs/AI agents working on this project.
+
+## Project Summary
+**Name**: Própolis do Frei
+**Type**: Internal Managment System (ERP-lite) for product distribution.
+**Architecture**: Django Monolith (Server-Side Rendering).
+**Language**: Python 3.12+ (Backend), HTML/CSS (Frontend).
+
+## Tech Stack Rules
+- **Backend**: Django 5.x. Pure Django Views (FBV) preferred over CBV when logic is complex.
+- **Frontend**: Django Templates. NO React/Vue. Use **HTMX** for interactivity.
+- **Styling**: Tailwind CSS (Utility classes).
+- **Database**: SQLite (Dev). Models use UUIDs as primary keys.
+
+## Critical Coding Standards
+1. **Vertical Template Blocks**: NEVER write inline `{% if %}` logic inside HTML tags. Always use vertical blocks to avoid auto-formatter breakage.
+   ```html
+   <!-- BAD -->
+   <option {% if x %}selected{% endif %}>
+   
+   <!-- GOOD -->
+   {% if x %}
+     <option selected>
+   {% else %}
+     <option>
+   {% endif %}
+   ```
+
+2. **HTMX Integration**:
+   - Use `apps.core.middleware.HtmxMiddleware`.
+   - APIs return **HTML fragments** (partials), not JSON.
+
+## Core Modules
+- **Authentication**: Custom user model (`apps/authentication`).
+- **Products**: `Product`, `Category`, `ProductStock` (stock level per establishment).
+- **Orders**: `Order`, `OrderItem`. Logic handles stock deduction on confirmation.
+- **Establishments**: Multi-tenant-like isolation (`apps/establishments`).
+
+## Key Files
+- `config/settings.py`: Main configuration.
+- `apps/orders/views.py`: Complex business logic for orders.
+- `templates/base.html`: Main layout with sidebar and HTMX boosters.

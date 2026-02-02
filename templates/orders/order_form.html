@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}Novo Pedido - Própolis do Frei{% endblock %}
+
+{% block breadcrumbs %}
+<span style="color: #a3a3a3;">Início / Pedidos / </span> <span style="font-weight: 600;">Novo</span>
+{% endblock %}
+
+{% block content %}
+<div class="flex-col gap-6" style="max-width: 1000px; margin: 0 auto;">
+    <div class="flex items-center gap-4">
+        <a href="{% url 'order_list' %}" class="btn btn-outline p-2">
+            <i data-lucide="arrow-left"></i>
+        </a>
+        <h1 style="font-size: 1.875rem; font-weight: 700;">Criar Novo Pedido de Distribuição</h1>
+    </div>
+
+    <form method="post" id="order-form" class="flex-col gap-6">
+        {% csrf_token %}
+
+        <div class="card flex-col gap-4">
+            <h3 style="font-size: 1.125rem; font-weight: 600;">Informações do Pedido</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div class="flex-col gap-2">
+                    <label class="label">Distribuidor / Cliente</label>
+                    <select name="distributor" class="input" required>
+                        <option value="">Selecione o destino...</option>
+                        {% for dist in distributors %}
+                        <option value="{{ dist.id }}">{{ dist.name }} ({{ dist.city }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="flex-col gap-2">
+                    <label class="label">Unidade Origem (Saindo de)</label>
+                    <select name="establishment" class="input" required>
+                        {% for est in establishments %}
+                        {% if user.establishment.id == est.id %}
+                        <option value="{{ est.id }}" selected>{{ est.name }}</option>
+                        {% else %}
+                        <option value="{{ est.id }}">{{ est.name }}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="card flex-col gap-4">
+            <div class="flex justify-between items-center">
+                <h3 style="font-size: 1.125rem; font-weight: 600;">Itens do Pedido</h3>
+                <button type="button" id="add-item" class="btn btn-outline btn-sm">
+                    <i data-lucide="plus"></i> Adicionar Item
+                </button>
+            </div>
+
+            <table id="items-table" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border); text-align: left;">
+                        <th style="padding: 0.75rem 0; font-size: 0.875rem; color: #666;">Produto</th>
+                        <th style="padding: 0.75rem 0; width: 120px; font-size: 0.875rem; color: #666;">Qtd</th>
+                        <th style="padding: 0.75rem 0; width: 150px; font-size: 0.875rem; color: #666;">Preço Unit. (R$)
+                        </th>
+                        <th style="padding: 0.75rem 0; width: 50px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="items-body">
+                    <tr class="item-row" style="border-bottom: 1px solid var(--sidebar-accent);">
+                        <td style="padding: 1rem 0;">
+                            <select name="products[]" class="input product-select" required>
+                                <option value="">Escolha um produto...</option>
+                                {% for prod in products %}
+                                <option value="{{ prod.id }}" data-price="{{ prod.sale_price }}">{{ prod.name }} (Ref:
+                                    {{ prod.sale_price }})</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td style="padding: 1rem 0.5rem 1rem 0;">
+                            <input type="number" name="quantities[]" class="input qty-input" min="1" value="1" required>
+                        </td>
+                        <td style="padding: 1rem 0;">
+                            <input type="text" name="unit_prices[]" class="input price-input" value="0,00" required>
+                        </td>
+                        <td style="padding: 1rem 0; text-align: right;">
+                            <button type="button" class="btn btn-outline remove-item"
+                                style="color: #ef4444; border-color: #fee2e2;">
+                                <i data-lucide="trash-2" style="width: 16px;"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="flex justify-end items-center gap-4"
+                style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                <div style="text-align: right;">
+                    <p style="font-size: 0.875rem; color: #666;">Valor Total Estimado</p>
+                    <p style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">R$ <span
+                            id="total-amount">0,00</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-3">
+            <a href="{% url 'order_list' %}" class="btn btn-outline">Cancelar</a>
+            <button type="submit" class="btn btn-primary">
+                <i data-lucide="save"></i> Salvar Rascunho do Pedido
+            </button>
+        </div>
+    </form>
+</div>
+
+<template id="row-template">
+    <tr class="item-row" style="border-bottom: 1px solid var(--sidebar-accent);">
+        <td style="padding: 1rem 0;">
+            <select name="products[]" class="input product-select" required>
+                <option value="">Escolha um produto...</option>
+                {% for prod in products %}
+                <option value="{{ prod.id }}" data-price="{{ prod.sale_price }}">{{ prod.name }} (Ref: {{
+                    prod.sale_price }})</option>
+                {% endfor %}
+            </select>
+        </td>
+        <td style="padding: 1rem 0.5rem 1rem 0;">
+            <input type="number" name="quantities[]" class="input qty-input" min="1" value="1" required>
+        </td>
+        <td style="padding: 1rem 0;">
+            <input type="text" name="unit_prices[]" class="input price-input" value="0,00" required>
+        </td>
+        <td style="padding: 1rem 0; text-align: right;">
+            <button type="button" class="btn btn-outline remove-item" style="color: #ef4444; border-color: #fee2e2;">
+                <i data-lucide="trash-2" style="width: 16px;"></i>
+            </button>
+        </td>
+    </tr>
+</template>
+
+<style>
+    .label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #404040;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.875rem;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const body = document.getElementById('items-body');
+        const addBtn = document.getElementById('add-item');
+        const template = document.getElementById('row-template');
+        const totalSpan = document.getElementById('total-amount');
+
+        // Helper to parse localized currency string to float
+        function parseLocaleNumber(stringNumber) {
+            if (!stringNumber) return 0;
+            return parseFloat(stringNumber.replace(/\./g, '').replace(',', '.'));
+        }
+
+        // Helper to format float to localized currency string
+        function formatLocaleNumber(number) {
+            return number.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function calculateLineTotal(row) {
+            const qtyInput = row.querySelector('.qty-input');
+            const priceInput = row.querySelector('.price-input');
+
+            const qty = parseInt(qtyInput.value) || 0;
+            const unitPrice = parseLocaleNumber(priceInput.value);
+
+            return qty * unitPrice;
+        }
+
+        function updateTotal() {
+            let total = 0;
+            document.querySelectorAll('.item-row').forEach(row => {
+                total += calculateLineTotal(row);
+            });
+            totalSpan.textContent = formatLocaleNumber(total);
+        }
+
+        function handleProductChange(row) {
+            const select = row.querySelector('.product-select');
+            const priceInput = row.querySelector('.price-input');
+            const option = select.selectedOptions[0];
+
+            if (option && option.dataset.price) {
+                // Pre-fill with catalog price if user hasn't typed a custom one OR if we want to reset
+                // For better UX, let's always update on product change to the catalog reference
+                const catalogPrice = parseFloat(option.dataset.price.replace(',', '.'));
+                priceInput.value = formatLocaleNumber(catalogPrice);
+                updateTotal();
+            }
+        }
+
+        addBtn.addEventListener('click', () => {
+            const clone = template.content.cloneNode(true);
+            body.appendChild(clone);
+            lucide.createIcons();
+            // Don't call updateTotal here as empty fields = 0
+        });
+
+        body.addEventListener('click', (e) => {
+            if (e.target.closest('.remove-item')) {
+                if (document.querySelectorAll('.item-row').length > 1) {
+                    e.target.closest('.item-row').remove();
+                    updateTotal();
+                }
+            }
+        });
+
+        body.addEventListener('change', (e) => {
+            const row = e.target.closest('.item-row');
+            if (!row) return;
+
+            if (e.target.classList.contains('product-select')) {
+                handleProductChange(row);
+            } else if (e.target.classList.contains('qty-input')) {
+                updateTotal();
+            } else if (e.target.classList.contains('price-input')) {
+                // Format input on change to look like currency
+                const rawValue = parseLocaleNumber(e.target.value);
+                e.target.value = formatLocaleNumber(rawValue);
+                updateTotal();
+            }
+        });
+    });
+</script>
+{% endblock %}

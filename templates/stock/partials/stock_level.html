@@ -1,0 +1,15 @@
+{% if stock is not None %}
+{% if stock > 0 %}
+<span
+    style="font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: #dcfce7; color: #166534;">
+    Estoque Atual: {{ stock }}
+</span>
+{% else %}
+<span
+    style="font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: #fee2e2; color: #991b1b;">
+    Estoque Atual: {{ stock }}
+</span>
+{% endif %}
+{% else %}
+<span style="font-size: 0.75rem; color: #999;">Selecione produto e local</span>
+{% endif %}

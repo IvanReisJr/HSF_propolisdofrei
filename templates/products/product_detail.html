@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} - Detalhes - Própolis do Frei{% endblock %}
+
+{% block breadcrumbs %}
+<span style="color: #a3a3a3;">Início / Produtos / </span> <span style="font-weight: 600;">Detalhes</span>
+{% endblock %}
+
+{% block content %}
+<div class="flex-col gap-6">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <a href="{% url 'product_list' %}" class="btn btn-outline p-2">
+                <i data-lucide="arrow-left"></i>
+            </a>
+            <div>
+                <h1 style="font-size: 1.875rem; font-weight: 700;">{{ product.name }}</h1>
+                <p style="color: #666;">SKU: <span style="font-family: monospace; font-weight: 600;">{{ product.code
+                        }}</span> | Categoria: {{ product.category.name }}</p>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <a href="{% url 'product_edit' product.pk %}" class="btn btn-outline">
+                <i data-lucide="edit-2"></i> Editar
+            </a>
+            <button class="btn btn-primary">
+                <i data-lucide="plus"></i> Ajustar Estoque
+            </button>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem;">
+        <!-- Info Card -->
+        <div class="flex-col gap-6">
+            <div class="card flex-col gap-4">
+                <h3
+                    style="font-size: 1.125rem; font-weight: 600; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
+                    Informações Gerais</h3>
+                <div class="flex justify-between">
+                    <span style="color: #666;">Status</span>
+                    <span
+                        style="padding: 0.25rem 0.5rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; 
+                        background: {% if product.status == 'active' %}#dcfce7; color: #166534{% else %}#fee2e2; color: #991b1b{% endif %};">
+                        {{ product.get_status_display }}
+                    </span>
+                </div>
+                <div class="flex justify-between">
+                    <span style="color: #666;">Unidade</span>
+                    <span style="font-weight: 600;">{{ product.get_unit_display }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span style="color: #666;">Preço de Custo</span>
+                    <span style="font-weight: 600;">R$ {{ product.cost_price }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span style="color: #666;">Preço de Venda</span>
+                    <span style="font-weight: 600; color: var(--primary);">R$ {{ product.sale_price }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span style="color: #666;">Margem</span>
+                    <span style="font-weight: 600; color: #22c55e;">{{ product.get_margin|floatformat:1 }}%</span>
+                </div>
+            </div>
+
+            <div class="card flex-col gap-4" style="background: #fffbeb; border-color: #fef3c7;">
+                <h3 style="font-size: 1.125rem; font-weight: 600; color: #92400e;">Alerta de Estoque</h3>
+                <div class="flex justify-between">
+                    <span style="color: #92400e;">Mínimo Desejado</span>
+                    <span style="font-weight: 700;">{{ product.min_stock }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span style="color: #92400e;">Total em Rede</span>
+                    <span
+                        style="font-weight: 700; color: {% if product.get_total_stock < product.min_stock %}#ef4444{% else %}#166534{% endif %};">
+                        {{ product.get_total_stock }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock Per Establishment Card -->
+        <div class="card">
+            <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1.5rem;">Estoque por Unidade</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border); text-align: left;">
+                        <th style="padding: 0.75rem 0; font-size: 0.875rem; color: #666;">Unidade</th>
+                        <th style="padding: 0.75rem 0; font-size: 0.875rem; color: #666;">Localização</th>
+                        <th style="padding: 0.75rem 0; font-size: 0.875rem; color: #666; text-align: right;">Quantidade
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stock in stocks %}
+                    <tr style="border-bottom: 1px solid var(--sidebar-accent);">
+                        <td style="padding: 1rem 0; font-weight: 600;">{{ stock.establishment.name }}</td>
+                        <td style="padding: 1rem 0; font-size: 0.875rem; color: #666;">{{ stock.establishment.city }},
+                            {{ stock.establishment.state }}</td>
+                        <td style="padding: 1rem 0; text-align: right; font-weight: 700; font-size: 1.125rem;">{{
+                            stock.current_stock }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" style="padding: 2rem; text-align: center; color: #a3a3a3;">Nenhum registro de
+                            estoque para esta unidade.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

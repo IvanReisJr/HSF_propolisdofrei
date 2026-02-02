@@ -1,0 +1,237 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Própolis do Frei - Sistema de Gestão{% endblock %}</title>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+
+    <!-- Tailwind CSS (Optional - for utility classes) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    {% block extra_head %}{% endblock %}
+    <style>
+        /* HTMX Progress Bar */
+        .htmx-indicator {
+            display: none;
+        }
+
+        .htmx-request .htmx-indicator {
+            display: inline;
+        }
+
+        .htmx-request.htmx-indicator {
+            display: inline;
+        }
+
+        /* Top progress bar */
+        #progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background-color: var(--primary);
+            z-index: 9999;
+            transition: width 0.3s ease-in-out;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    <div id="progress-bar"></div>
+    <div class="app-container">
+        {% if user.is_authenticated %}
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header" style="padding: 1.5rem 1rem; justify-content: center;">
+                <img src="{% static 'img/DoFrei.png' %}" alt="Própolis do Frei" class="sidebar-logo">
+            </div>
+            <nav class="sidebar-content" hx-target="#content-area" hx-push-url="true" hx-boost="true">
+                <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">
+                    <i data-lucide="layout-dashboard"></i> Dashboard
+                </a>
+
+                <!-- Cadastros Collapsible Section -->
+                <div class="nav-section" style="margin-top: 0.5rem;">
+                    <button class="nav-section-toggle" onclick="toggleSection('cadastros')"
+                        style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: 2px; color: #F3E5AB; font-weight: 600; background: none; border: none; width: 100%; cursor: pointer; font-size: 0.875rem; transition: all 0.2s;">
+                        <i data-lucide="folder-open"></i>
+                        <span>Cadastros</span>
+                        <i data-lucide="chevron-down" class="chevron" id="cadastros-chevron"
+                            style="margin-left: auto; transition: transform 0.3s ease; width: 16px; height: 16px;"></i>
+                    </button>
+                    <div class="nav-submenu" id="cadastros-submenu"
+                        style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; padding-left: 1rem;">
+                        <a href="/products/" class="nav-sublink {% if 'products' in request.path %}active{% endif %}"
+                            style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem; border-radius: 2px; color: #A3A3A3; font-weight: 500; font-size: 0.8125rem; transition: all 0.2s; margin-top: 0.25rem;">
+                            <i data-lucide="package" style="width: 16px; height: 16px;"></i> Produtos
+                        </a>
+                        <a href="/categories/"
+                            class="nav-sublink {% if 'categories' in request.path %}active{% endif %}"
+                            style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem; border-radius: 2px; color: #A3A3A3; font-weight: 500; font-size: 0.8125rem; transition: all 0.2s; margin-top: 0.25rem;">
+                            <i data-lucide="folder" style="width: 16px; height: 16px;"></i> Categorias
+                        </a>
+                        <a href="/core/units/"
+                            class="nav-sublink {% if 'core/units' in request.path %}active{% endif %}"
+                            style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem; border-radius: 2px; color: #A3A3A3; font-weight: 500; font-size: 0.8125rem; transition: all 0.2s; margin-top: 0.25rem;">
+                            <i data-lucide="scale" style="width: 16px; height: 16px;"></i> Unidades de Medida
+                        </a>
+                        <a href="/distributors/"
+                            class="nav-sublink {% if 'distributors' in request.path %}active{% endif %}"
+                            style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem; border-radius: 2px; color: #A3A3A3; font-weight: 500; font-size: 0.8125rem; transition: all 0.2s; margin-top: 0.25rem;">
+                            <i data-lucide="users" style="width: 16px; height: 16px;"></i> Distribuidores
+                        </a>
+                        <a href="/establishments/"
+                            class="nav-sublink {% if 'establishments' in request.path %}active{% endif %}"
+                            style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem; border-radius: 2px; color: #A3A3A3; font-weight: 500; font-size: 0.8125rem; transition: all 0.2s; margin-top: 0.25rem;">
+                            <i data-lucide="building-2" style="width: 16px; height: 16px;"></i> Unidades / Filiais
+                        </a>
+                    </div>
+                </div>
+
+                <div
+                    style="font-size: 0.75rem; font-weight: 700; color: #78350F; margin-top: 1rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; padding-left: 0.75rem;">
+                    Operação</div>
+                <a href="/stock/movements/" class="nav-link {% if 'stock' in request.path %}active{% endif %}">
+                    <i data-lucide="arrow-left-right"></i> Estoque
+                </a>
+                <a href="/orders/" class="nav-link {% if 'orders' in request.path %}active{% endif %}">
+                    <i data-lucide="shopping-cart"></i> Pedidos
+                </a>
+
+                {% if user.is_staff %}
+                <div
+                    style="margin-top: 2rem; padding: 0 0.75rem; font-size: 0.75rem; font-weight: 700; color: #a3a3a3;">
+                    ADMINISTRAÇÃO</div>
+                <a href="/admin/" class="nav-link" hx-boost="false">
+                    <i data-lucide="settings"></i> Django Admin
+                </a>
+                <a href="/audit/logs/" class="nav-link {% if 'audit' in request.path %}active{% endif %}">
+                    <i data-lucide="clipboard-list"></i> Auditoria
+                </a>
+                {% endif %}
+            </nav>
+
+            <div class="sidebar-footer" style="padding: 1rem; border-top: 1px solid var(--sidebar-border);">
+                <form action="{% url 'logout' %}" method="post" hx-boost="false">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-link"
+                        style="background: none; border: none; width: 100%; text-align: left; cursor: pointer;">
+                        <i data-lucide="log-out"></i> Sair
+                    </button>
+                </form>
+            </div>
+        </aside>
+        {% endif %}
+
+        <!-- Main Content -->
+        <main class="main-content">
+            {% if user.is_authenticated %}
+            <div class="top-bar" id="top-bar">
+                <div class="breadcrumbs">
+                    {% block breadcrumbs %}
+                    <span style="color: #a3a3a3;">Início</span>
+                    {% endblock %}
+                </div>
+                <div class="user-menu" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i data-lucide="user" style="width: 16px; color: var(--primary);"></i>
+                    <span style="font-weight: 600; color: #4B3621;">{{ user.email }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="content-area" id="content-area" hx-boost="true" hx-target="this" hx-swap="innerHTML">
+                {% if messages %}
+                <div style="margin-bottom: 1.5rem;">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}"
+                        style="padding: 1rem; border-radius: 2px; margin-bottom: 0.5rem; background: {% if message.tags == 'success' %}#D1FAE5{% elif message.tags == 'error' %}#FEE2E2{% else %}#FEF3C7{% endif %}; color: {% if message.tags == 'success' %}#065F46{% elif message.tags == 'error' %}#991B1B{% else %}#92400E{% endif %}; border-left: 3px solid {% if message.tags == 'success' %}#059669{% elif message.tags == 'error' %}#DC2626{% else %}#D4AF37{% endif %};">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% block content %}
+                {% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Collapsible Section Logic
+        function toggleSection(sectionId) {
+            const submenu = document.getElementById(sectionId + '-submenu');
+            const chevron = document.getElementById(sectionId + '-chevron');
+
+            const isCollapsed = !submenu.style.maxHeight || submenu.style.maxHeight === '0px' || submenu.style.maxHeight === '0';
+
+            if (isCollapsed) {
+                submenu.style.maxHeight = submenu.scrollHeight + "px";
+                if (chevron) chevron.style.transform = 'rotate(180deg)';
+            } else {
+                submenu.style.maxHeight = "0px";
+                if (chevron) chevron.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // Auto-expand if current page is in submenu
+        function updateSidebarState() {
+            const activeSublink = document.querySelector('.nav-sublink.active');
+            if (activeSublink) {
+                const parentSubmenu = activeSublink.closest('.nav-submenu');
+                if (parentSubmenu) {
+                    parentSubmenu.style.maxHeight = parentSubmenu.scrollHeight + 'px';
+                    const sectionId = parentSubmenu.id.replace('-submenu', '');
+                    const chevron = document.getElementById(sectionId + '-chevron');
+                    if (chevron) chevron.style.transform = 'rotate(180deg)';
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', updateSidebarState);
+        document.addEventListener('htmx:afterOnLoad', updateSidebarState);
+        document.addEventListener('htmx:afterSwap', function () {
+            lucide.createIcons();
+            // Update active classes on sidebar
+            document.querySelectorAll('.nav-link, .nav-sublink').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === window.location.pathname ||
+                    (link.getAttribute('href') !== '/' && window.location.pathname.startsWith(link.getAttribute('href')))) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // Progress Bar logic
+        document.addEventListener('htmx:configRequest', function () {
+            document.getElementById('progress-bar').style.width = '30%';
+        });
+        document.addEventListener('htmx:beforeSwap', function () {
+            document.getElementById('progress-bar').style.width = '70%';
+        });
+        document.addEventListener('htmx:afterSwap', function () {
+            document.getElementById('progress-bar').style.width = '100%';
+            setTimeout(() => {
+                document.getElementById('progress-bar').style.width = '0%';
+            }, 300);
+        });
+    </script>
+</body>
+
+</html>

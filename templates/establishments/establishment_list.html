@@ -1,0 +1,76 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Unidades - Própolis do Frei{% endblock %}
+
+{% block breadcrumbs %}
+<span style="color: #a3a3a3;">Início / </span> <span style="font-weight: 600;">Unidades</span>
+{% endblock %}
+
+{% block content %}
+<div class="flex-col gap-6">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 style="font-size: 1.875rem; font-weight: 700;">Unidades (Estabelecimentos)</h1>
+            <p style="color: #666;">Gerencie os locais físicos e unidades de distribuição da rede.</p>
+        </div>
+        <a href="{% url 'establishment_create' %}" class="btn btn-primary">
+            <i data-lucide="plus"></i> Adicionar Unidade
+        </a>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+        {% for est in establishments %}
+        <div class="card flex-col gap-4">
+            <div class="flex justify-between items-start">
+                <div
+                    style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: var(--sidebar-accent); border-radius: var(--radius); color: var(--primary);">
+                    <i data-lucide="building-2"></i>
+                </div>
+
+                {% if est.is_active %}
+                <span
+                    style="padding: 0.25rem 0.5rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; background: #dcfce7; color: #166534;">
+                    Ativa
+                </span>
+                {% else %}
+                <span
+                    style="padding: 0.25rem 0.5rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; background: #fee2e2; color: #991b1b;">
+                    Inativa
+                </span>
+                {% endif %}
+            </div>
+
+            <div>
+                <h3 style="font-size: 1.125rem; font-weight: 600;">{{ est.name }}</h3>
+                <p style="font-size: 0.875rem; color: #666;">{{ est.city }}, {{ est.state }}</p>
+                <p style="font-size: 0.75rem; font-family: monospace; color: #a3a3a3; margin-top: 0.25rem;">
+                    CÓD: {{ est.code }}
+                </p>
+            </div>
+
+            <div style="border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 0.5rem;"
+                class="flex-col gap-2">
+                <div class="flex items-center gap-2" style="font-size: 0.875rem; color: #404040;">
+                    <i data-lucide="phone" style="width: 14px; opacity: 0.6;"></i> {{ est.phone|default:"---" }}
+                </div>
+                <div class="flex items-center gap-2" style="font-size: 0.875rem; color: #404040;">
+                    <i data-lucide="mail" style="width: 14px; opacity: 0.6;"></i> {{ est.email|default:"---" }}
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2" style="margin-top: 0.5rem;">
+                <a href="{% url 'establishment_edit' est.pk %}" class="btn btn-outline" style="width: 100%;">
+                    <i data-lucide="settings"></i> Gerenciar Unidade
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="card" style="grid-column: 1 / -1; padding: 3rem; text-align: center; color: #a3a3a3;">
+            <i data-lucide="building"
+                style="width: 48px; height: 48px; display: block; margin: 0 auto 1rem; opacity: 0.3;"></i>
+            Nenhuma unidade cadastrada.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

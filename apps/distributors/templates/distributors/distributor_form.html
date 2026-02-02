@@ -1,0 +1,97 @@
+﻿{% extends "base.html" %}
+
+{% block title %}{% if distributor %}Editar{% else %}Novo{% endif %} Distribuidor - Própolis do Frei{% endblock %}
+
+{% block breadcrumbs %}
+<span style="color: #a3a3a3;">Cadastros / Distribuidores / </span> <span style="font-weight: 600; color: var(--primary);">{% if distributor %}Editar{% else %}Novo{% endif %}</span>
+{% endblock %}
+
+{% block content %}
+<div class="flex-col gap-6 animate-enter" style="max-width: 800px; margin: 0 auto;">
+    <div class="card p-6">
+        <h1 style="font-size: 1.5rem; font-weight: 800; color: #4B3621; margin-bottom: 1.5rem;">
+            {% if distributor %}Editar Distribuidor{% else %}Novo Distribuidor{% endif %}
+        </h1>
+
+        <form method="post" class="flex-col gap-4">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="flex-col gap-2">
+                    <label for="code" class="label">Código</label>
+                    {% if distributor %}
+                    <input type="text" name="code" id="code" class="input" value="{{ distributor.code }}" required>
+                    {% else %}
+                    <input type="text" value="{{ next_code }}" class="input" disabled style="background: #f3f4f6; color: #666;">
+                    <input type="hidden" name="code" value="{{ next_code }}">
+                    <p style="font-size: 0.75rem; color: #666; margin-top: 0.25rem;">Código gerado automaticamente</p>
+                    {% endif %}
+                </div>
+                
+                <div class="flex-col gap-2">
+                    <label for="name" class="label">Nome completo / Razão Social</label>
+                    <input type="text" name="name" id="name" class="input" value="{{ distributor.name|default:'' }}" required placeholder="Ex: Distribuidora Mel de Ouro">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="flex-col gap-2">
+                    <label for="document" class="label">Documento (CPF/CNPJ)</label>
+                    <input type="text" name="document" id="document" class="input" value="{{ distributor.document|default:'' }}" placeholder="Ex: 00.000.000/0001-00">
+                </div>
+                
+                <div class="flex-col gap-2">
+                    <label for="email" class="label">E-mail de contato</label>
+                    <input type="email" name="email" id="email" class="input" value="{{ distributor.email|default:'' }}" placeholder="exemplo@distribuidor.com">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="flex-col gap-2">
+                    <label for="phone" class="label">Telefone</label>
+                    <input type="text" name="phone" id="phone" class="input" value="{{ distributor.phone|default:'' }}" placeholder="(00) 00000-0000">
+                </div>
+                
+                <div class="flex-col gap-2">
+                    <label for="is_active" class="label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; text-transform: none;">
+                        <input type="checkbox" name="is_active" id="is_active" {% if distributor.is_active or not distributor %}checked{% endif %} style="width: 1.25rem; height: 1.25rem; accent-color: var(--primary);">
+                        Distribuidor Ativo
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex-col gap-2">
+                <label for="address" class="label">Endereço</label>
+                <input type="text" name="address" id="address" class="input" value="{{ distributor.address|default:'' }}" placeholder="Rua, número, bairro...">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="flex-col gap-2">
+                    <label for="city" class="label">Cidade</label>
+                    <input type="text" name="city" id="city" class="input" value="{{ distributor.city|default:'' }}" placeholder="Ex: Taubaté">
+                </div>
+                
+                <div class="flex-col gap-2">
+                    <label for="state" class="label">Estado (UF)</label>
+                    <select name="state" class="input" required>
+                        <option value="">Selecione...</option>
+                        {% for code, name in states %}
+                        <option value="{{ code }}" {% if distributor.state == code %}selected{% endif %}>{{ name }} ({{ code }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex-col gap-2">
+                <label for="notes" class="label">Observações</label>
+                <textarea name="notes" id="notes" class="input" rows="3" placeholder="Informações adicionais...">{{ distributor.notes|default:'' }}</textarea>
+            </div>
+
+            <div class="flex gap-3 mt-4 justify-end">
+                <a href="{% url 'distributor_list' %}" class="btn btn-outline">Cancelar</a>
+                <button type="submit" class="btn btn-primary hover-lift hover-glow">Salvar Distribuidor</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

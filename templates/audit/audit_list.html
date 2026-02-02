@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Logs de Auditoria - Própolis do Frei{% endblock %}
+
+{% block breadcrumbs %}
+<span style="color: #a3a3a3;">Administração / </span> <span style="font-weight: 600;">Auditoria</span>
+{% endblock %}
+
+{% block content %}
+<div class="flex-col gap-6">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 style="font-size: 1.875rem; font-weight: 700;">Auditoria do Sistema</h1>
+            <p style="color: #666;">Rastreabilidade completa de todas as ações realizadas no sistema.</p>
+        </div>
+    </div>
+
+    <!-- Audit Filters -->
+    <div class="card flex items-center gap-4">
+        <form method="get" class="flex items-center gap-4" style="flex: 1;">
+            <input type="text" name="user" value="{{ request.GET.user }}" class="input" style="flex: 1;"
+                placeholder="Filtrar por usuário...">
+
+            <select name="action" class="input" style="width: 200px;">
+                <option value="">Todas Ações</option>
+                {% for action in actions %}
+                <option value="{{ action }}" {% if request.GET.action == action %}selected{% endif %}>{{ action }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <input type="text" name="resource" value="{{ request.GET.resource }}" class="input" style="width: 200px;"
+                placeholder="Tipo de recurso...">
+
+            <button type="submit" class="btn btn-outline">Filtrar</button>
+            <a href="{% url 'audit_list' %}" class="btn btn-outline" title="Limpar">
+                <i data-lucide="rotate-ccw" style="width: 18px;"></i>
+            </a>
+        </form>
+    </div>
+
+    <div class="card">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border); text-align: left;">
+                    <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Ocorrência</th>
+                    <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Usuário</th>
+                    <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Ação</th>
+                    <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Recurso</th>
+                    <th style="padding: 1rem; font-size: 0.875rem; color: #666;">IP</th>
+                    <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Detalhes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr style="border-bottom: 1px solid var(--sidebar-accent);">
+                    <td style="padding: 1rem; font-size: 0.875rem;">{{ log.occurred_at|date:"d/m/Y H:i:s" }}</td>
+                    <td style="padding: 1rem; font-weight: 600;">{{ log.user.username }}</td>
+                    <td style="padding: 1rem;">
+                        <span
+                            style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: {% if log.action  ==  'DELETE' %}#ef4444{% elif log.action  ==  'INSERT' %}#22c55e{% else %}#3b82f6{% endif %};">
+                            {{ log.action }}
+                        </span>
+                    </td>
+                    <td style="padding: 1rem; font-size: 0.875rem;">{{ log.resource_type }}</td>
+                    <td style="padding: 1rem; font-family: monospace; font-size: 0.75rem; color: #666;">{{
+                        log.ip_address }}</td>
+                    <td style="padding: 1rem;">
+                        <button class="btn btn-outline p-1" title="Ver Detalhes">
+                            <i data-lucide="code" style="width: 14px;"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="padding: 3rem; text-align: center; color: #a3a3a3;">
+                        Nenhum log de auditoria encontrado.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

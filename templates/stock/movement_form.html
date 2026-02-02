@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Movimentação - Própolis do Frei{% endblock %}
+
+{% block breadcrumbs %}
+<span style="color: #a3a3a3;">Início / Estoque / </span> <span style="font-weight: 600;">Nova Movimentação</span>
+{% endblock %}
+
+{% block content %}
+<div class="flex-col gap-6" style="max-width: 800px; margin: 0 auto;">
+    <div class="flex items-center gap-4">
+        <a href="{% url 'movement_list' %}" class="btn btn-outline p-2">
+            <i data-lucide="arrow-left"></i>
+        </a>
+        <h1 style="font-size: 1.875rem; font-weight: 700;">Registrar Movimentação</h1>
+    </div>
+
+    <form method="post" class="card flex-col gap-6">
+        {% csrf_token %}
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+            <div class="flex-col gap-2">
+                <label class="label">Produto</label>
+                <select name="product" class="input" required hx-get="{% url 'get_stock_level' %}"
+                    hx-target="#stock-display" hx-include="[name='establishment']">
+                    <option value="">Selecione o produto...</option>
+                    {% for prod in products %}
+                    <option value="{{ prod.id }}">{{ prod.name }} ({{ prod.code }}) - Unidade: {{ prod.unit }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex-col gap-2">
+                <label class="label">Tipo de Movimento</label>
+                <select name="type" class="input" required>
+                    <option value="entry">Entrada Manual</option>
+                    <option value="exit">Saída Manual</option>
+                    <option value="adjustment_plus">Ajuste (Adicionar)</option>
+                    <option value="adjustment_minus">Ajuste (Subtrair)</option>
+                    <option value="reversal_in">Estorno de Entrada</option>
+                    <option value="reversal_out">Estorno de Saída</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <div class="flex-col gap-2">
+                <label class="label">Unidade / Local</label>
+                <select name="establishment" class="input" required hx-get="{% url 'get_stock_level' %}"
+                    hx-target="#stock-display" hx-include="[name='product']">
+                    {% for est in establishments %}
+                    <option value="{{ est.id }}">{{ est.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex-col gap-2">
+                <div class="flex justify-between items-center">
+                    <label class="label">Quantidade</label>
+                    <div id="stock-display">
+                        <!-- HTMX content will be loaded here -->
+                    </div>
+                </div>
+                <input type="number" name="quantity" class="input" min="1" value="1" required>
+            </div>
+        </div>
+
+        <div class="flex-col gap-2">
+            <label class="label">Motivo / Justificativa</label>
+            <textarea name="reason" class="input" style="min-height: 100px;"
+                placeholder="Explique o motivo desta movimentação..."></textarea>
+        </div>
+
+        <div class="flex justify-end gap-3"
+            style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-top: 1rem;">
+            <a href="{% url 'movement_list' %}" class="btn btn-outline">Cancelar</a>
+            <button type="submit" class="btn btn-primary">
+                <i data-lucide="check"></i> Confirmar Movimentação
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    .label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #404040;
+    }
+</style>
+{% endblock %}
