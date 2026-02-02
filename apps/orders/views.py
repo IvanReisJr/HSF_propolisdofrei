@@ -11,12 +11,23 @@ from django.db import transaction
 @login_required
 def order_list(request):
     user = request.user
-    if user.is_super_user_role():
-        orders = Order.objects.all().order_by('-created_at')
-    else:
-        orders = Order.objects.filter(establishment=user.establishment).order_by('-created_at')
+    status_filter = request.GET.get('status', 'all')
     
-    context = {'orders': orders}
+    if user.is_super_user_role():
+        orders = Order.objects.all()
+    else:
+        orders = Order.objects.filter(establishment=user.establishment)
+    
+    # Apply status filter
+    if status_filter != 'all':
+        orders = orders.filter(status=status_filter)
+    
+    orders = orders.order_by('-created_at')
+    
+    context = {
+        'orders': orders,
+        'status_filter': status_filter
+    }
     return render(request, 'orders/order_list.html', context)
 
 @login_required

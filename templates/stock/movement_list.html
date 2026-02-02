@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 
 {% block title %}Movimentações de Estoque - Própolis do Frei{% endblock %}
 
@@ -35,16 +35,24 @@
                 <tr style="border-bottom: 1px solid var(--sidebar-accent);">
                     <td style="padding: 1rem; font-size: 0.875rem;">{{ move.created_at|date:"d/m/Y H:i" }}</td>
                     <td style="padding: 1rem;">
-                        <span style="padding: 0.25rem 0.5rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; background: {% if move.movement_type == 'entrada' %}#dcfce7; color: #166534{% elif move.movement_type == 'saida' %}#fee2e2; color: #991b1b{% else %}#fef3c7; color: #92400e{% endif %};">
+                        <span
+                            style="padding: 0.25rem 0.5rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; background: {% if move.movement_type in 'entry,adjustment_plus,reversal_out' %}#dcfce7; color: #166534{% elif move.movement_type in 'exit,adjustment_minus,reversal_in' %}#fee2e2; color: #991b1b{% else %}#fef3c7; color: #92400e{% endif %};">
                             {{ move.get_movement_type_display }}
                         </span>
                     </td>
                     <td style="padding: 1rem; font-weight: 600;">{{ move.product.name }}</td>
                     <td style="padding: 1rem;">{{ move.establishment.name }}</td>
                     <td style="padding: 1rem; font-weight: 700;">
-                        {% if move.movement_type == 'entrada' %}+{% elif move.movement_type == 'saida' %}-{% endif %}{{ move.quantity }}
+                        {% if move.movement_type in 'entry,adjustment_plus,reversal_out' %}
+                        +
+                        {% elif move.movement_type in 'exit,adjustment_minus,reversal_in' %}
+                        -
+                        {% endif %}
+                        {{ move.quantity }}
                     </td>
-                    <td style="padding: 1rem; font-size: 0.875rem; color: #666;">{{ move.user.get_full_name|default:move.user.username }}</td>
+                    <td style="padding: 1rem; font-size: 0.875rem; color: #666;">
+                        {{ move.user.get_full_name|default:move.user.username }}
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>

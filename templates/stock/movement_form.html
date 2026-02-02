@@ -25,7 +25,7 @@
                     hx-target="#stock-display" hx-include="[name='establishment']">
                     <option value="">Selecione o produto...</option>
                     {% for prod in products %}
-                    <option value="{{ prod.id }}">{{ prod.name }} ({{ prod.code }}) - Unidade: {{ prod.unit }}</option>
+                    <option value="{{ prod.id }}">{{ prod.name }} - Unidade: {{ prod.unit }}</option>
                     {% endfor %}
                 </select>
             </div>

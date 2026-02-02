@@ -1,6 +1,7 @@
 import uuid
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 from decimal import Decimal
 
 
@@ -64,6 +65,28 @@ class Order(models.Model):
 
     def __str__(self):
         return f"{self.order_number} - {self.establishment.name}"
+
+    def save(self, *args, **kwargs):
+        if not self.order_number:
+            # Gerar um número de pedido legível: PED-AAAAMMDD-XXXX
+            now = timezone.now()
+            today_str = now.strftime('%Y%m%d')
+            
+            # Contagem simples para o dia
+            count = Order.objects.filter(
+                created_at__year=now.year,
+                created_at__month=now.month,
+                created_at__day=now.day
+            ).count() + 1
+            
+            self.order_number = f"PED-{today_str}-{count:04d}"
+            
+            # Garantir unicidade em caso de concorrência ou deleções
+            while Order.objects.filter(order_number=self.order_number).exists():
+                count += 1
+                self.order_number = f"PED-{today_str}-{count:04d}"
+                
+        super().save(*args, **kwargs)
 
 
 class OrderItem(models.Model):

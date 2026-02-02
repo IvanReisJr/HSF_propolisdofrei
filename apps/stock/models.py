@@ -5,10 +5,12 @@ from django.utils.translation import gettext_lazy as _
 
 class StockMovementType(models.TextChoices):
     """Tipos de movimentação de estoque"""
-    ENTRADA = 'entrada', _('Entrada')
-    SAIDA = 'saida', _('Saída')
-    AJUSTE = 'ajuste', _('Ajuste')
-    ESTORNO = 'estorno', _('Estorno')
+    ENTRY = 'entry', _('Entrada Manual')
+    EXIT = 'exit', _('Saída Manual')
+    ADJUSTMENT_PLUS = 'adjustment_plus', _('Ajuste (Adicionar)')
+    ADJUSTMENT_MINUS = 'adjustment_minus', _('Ajuste (Subtrair)')
+    REVERSAL_IN = 'reversal_in', _('Estorno de Entrada')
+    REVERSAL_OUT = 'reversal_out', _('Estorno de Saída')
 
 
 class StockMovement(models.Model):
@@ -31,7 +33,7 @@ class StockMovement(models.Model):
     )
     movement_type = models.CharField(
         _('Tipo de Movimentação'),
-        max_length=10,
+        max_length=20,
         choices=StockMovementType.choices
     )
     quantity = models.IntegerField(_('Quantidade'))

@@ -148,86 +148,118 @@
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const body = document.getElementById('items-body');
-        const addBtn = document.getElementById('add-item');
-        const template = document.getElementById('row-template');
-        const totalSpan = document.getElementById('total-amount');
+    (function () {
+        function initOrderForm() {
+            const body = document.getElementById('items-body');
+            const addBtn = document.getElementById('add-item');
+            const template = document.getElementById('row-template');
+            const totalSpan = document.getElementById('total-amount');
 
-        // Helper to parse localized currency string to float
-        function parseLocaleNumber(stringNumber) {
-            if (!stringNumber) return 0;
-            return parseFloat(stringNumber.replace(/\./g, '').replace(',', '.'));
-        }
+            if (!body || !addBtn || !template) return;
 
-        // Helper to format float to localized currency string
-        function formatLocaleNumber(number) {
-            return number.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
+            // Prevent multiple initializations if the script runs twice
+            if (addBtn.dataset.initialized) return;
+            addBtn.dataset.initialized = 'true';
 
-        function calculateLineTotal(row) {
-            const qtyInput = row.querySelector('.qty-input');
-            const priceInput = row.querySelector('.price-input');
+            console.log("Order form JS initialized");
 
-            const qty = parseInt(qtyInput.value) || 0;
-            const unitPrice = parseLocaleNumber(priceInput.value);
-
-            return qty * unitPrice;
-        }
-
-        function updateTotal() {
-            let total = 0;
-            document.querySelectorAll('.item-row').forEach(row => {
-                total += calculateLineTotal(row);
-            });
-            totalSpan.textContent = formatLocaleNumber(total);
-        }
-
-        function handleProductChange(row) {
-            const select = row.querySelector('.product-select');
-            const priceInput = row.querySelector('.price-input');
-            const option = select.selectedOptions[0];
-
-            if (option && option.dataset.price) {
-                // Pre-fill with catalog price if user hasn't typed a custom one OR if we want to reset
-                // For better UX, let's always update on product change to the catalog reference
-                const catalogPrice = parseFloat(option.dataset.price.replace(',', '.'));
-                priceInput.value = formatLocaleNumber(catalogPrice);
-                updateTotal();
+            // Helper to parse localized currency string to float
+            function parseLocaleNumber(stringNumber) {
+                if (!stringNumber) return 0;
+                return parseFloat(stringNumber.replace(/\./g, '').replace(',', '.'));
             }
-        }
 
-        addBtn.addEventListener('click', () => {
-            const clone = template.content.cloneNode(true);
-            body.appendChild(clone);
-            lucide.createIcons();
-            // Don't call updateTotal here as empty fields = 0
-        });
+            // Helper to format float to localized currency string
+            function formatLocaleNumber(number) {
+                return number.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
 
-        body.addEventListener('click', (e) => {
-            if (e.target.closest('.remove-item')) {
-                if (document.querySelectorAll('.item-row').length > 1) {
-                    e.target.closest('.item-row').remove();
+            function calculateLineTotal(row) {
+                const qtyInput = row.querySelector('.qty-input');
+                const priceInput = row.querySelector('.price-input');
+                const qty = parseInt(qtyInput.value) || 0;
+                const unitPrice = parseLocaleNumber(priceInput.value);
+                return qty * unitPrice;
+            }
+
+            function updateTotal() {
+                let total = 0;
+                document.querySelectorAll('.item-row').forEach(row => {
+                    total += calculateLineTotal(row);
+                });
+                totalSpan.textContent = formatLocaleNumber(total);
+            }
+
+            function handleProductChange(row) {
+                const select = row.querySelector('.product-select');
+                const priceInput = row.querySelector('.price-input');
+                const option = select.selectedOptions[0];
+                if (option && option.dataset.price) {
+                    const catalogPrice = parseFloat(option.dataset.price.replace(',', '.'));
+                    priceInput.value = formatLocaleNumber(catalogPrice);
                     updateTotal();
                 }
             }
-        });
 
-        body.addEventListener('change', (e) => {
-            const row = e.target.closest('.item-row');
-            if (!row) return;
+            addBtn.addEventListener('click', () => {
+                const clone = template.content.cloneNode(true);
+                body.appendChild(clone);
+                if (window.lucide) {
+                    lucide.createIcons();
+                }
+            });
 
-            if (e.target.classList.contains('product-select')) {
-                handleProductChange(row);
-            } else if (e.target.classList.contains('qty-input')) {
-                updateTotal();
-            } else if (e.target.classList.contains('price-input')) {
-                // Format input on change to look like currency
-                const rawValue = parseLocaleNumber(e.target.value);
-                e.target.value = formatLocaleNumber(rawValue);
-                updateTotal();
-            }
-        });
-    });
+            body.addEventListener('input', (e) => {
+                const row = e.target.closest('.item-row');
+                if (!row) return;
+                if (e.target.classList.contains('qty-input') || e.target.classList.contains('price-input')) {
+                    updateTotal();
+                }
+            });
+
+            body.addEventListener('change', (e) => {
+                const row = e.target.closest('.item-row');
+                if (!row) return;
+                if (e.target.classList.contains('product-select')) {
+                    handleProductChange(row);
+                }
+            });
+
+            body.addEventListener('focusout', (e) => {
+                if (e.target.classList.contains('price-input')) {
+                    let rawValue = parseLocaleNumber(e.target.value);
+                    if (isNaN(rawValue)) rawValue = 0;
+                    e.target.value = formatLocaleNumber(rawValue);
+                    updateTotal();
+                }
+            });
+
+            body.addEventListener('click', (e) => {
+                const removeBtn = e.target.closest('.remove-item');
+                if (removeBtn) {
+                    const row = removeBtn.closest('.item-row');
+                    if (document.querySelectorAll('.item-row').length > 1) {
+                        row.remove();
+                        updateTotal();
+                    } else {
+                        row.querySelector('.product-select').value = '';
+                        row.querySelector('.qty-input').value = '1';
+                        row.querySelector('.price-input').value = '0,00';
+                        updateTotal();
+                    }
+                }
+            });
+        }
+
+        // Initialize on Load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initOrderForm);
+        } else {
+            initOrderForm();
+        }
+
+        // Also initialize on HTMX swaps just in case
+        document.addEventListener('htmx:afterSwap', initOrderForm);
+    })();
 </script>
 {% endblock %}

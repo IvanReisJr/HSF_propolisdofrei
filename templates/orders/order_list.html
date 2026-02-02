@@ -18,13 +18,16 @@
         </a>
     </div>
 
-    <!-- Status Tabs (Visual only for now) -->
+    <!-- Status Tabs -->
     <div class="flex gap-4" style="border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
-        <span
-            style="color: var(--primary); font-weight: 600; border-bottom: 2px solid var(--primary); padding-bottom: 0.5rem; cursor: pointer;">Todos</span>
-        <span style="color: #666; font-weight: 500; padding-bottom: 0.5rem; cursor: pointer;">Pendentes</span>
-        <span style="color: #666; font-weight: 500; padding-bottom: 0.5rem; cursor: pointer;">Confirmados</span>
-        <span style="color: #666; font-weight: 500; padding-bottom: 0.5rem; cursor: pointer;">Cancelados</span>
+        <a href="{% url 'order_list' %}"
+            style="{% if status_filter == 'all' %}color: var(--primary); font-weight: 600; border-bottom: 2px solid var(--primary);{% else %}color: #666; font-weight: 500;{% endif %} padding-bottom: 0.5rem; cursor: pointer; text-decoration: none;">Todos</a>
+        <a href="{% url 'order_list' %}?status=pendente"
+            style="{% if status_filter == 'pendente' %}color: var(--primary); font-weight: 600; border-bottom: 2px solid var(--primary);{% else %}color: #666; font-weight: 500;{% endif %} padding-bottom: 0.5rem; cursor: pointer; text-decoration: none;">Pendentes</a>
+        <a href="{% url 'order_list' %}?status=confirmado"
+            style="{% if status_filter == 'confirmado' %}color: var(--primary); font-weight: 600; border-bottom: 2px solid var(--primary);{% else %}color: #666; font-weight: 500;{% endif %} padding-bottom: 0.5rem; cursor: pointer; text-decoration: none;">Confirmados</a>
+        <a href="{% url 'order_list' %}?status=cancelado"
+            style="{% if status_filter == 'cancelado' %}color: var(--primary); font-weight: 600; border-bottom: 2px solid var(--primary);{% else %}color: #666; font-weight: 500;{% endif %} padding-bottom: 0.5rem; cursor: pointer; text-decoration: none;">Cancelados</a>
     </div>
 
     <div class="card">
