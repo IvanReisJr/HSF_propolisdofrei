@@ -55,10 +55,10 @@
             <div class="flex-col gap-2">
                 <label class="label">Unidade de Medida</label>
                 <select name="unit" class="input" required>
-                    <option value="un" {% if product.unit == 'un' %}selected{% endif %}>Unidade (un)</option>
-                    <option value="kg" {% if product.unit == 'kg' %}selected{% endif %}>Quilo (kg)</option>
-                    <option value="l" {% if product.unit == 'l' %}selected{% endif %}>Litro (l)</option>
-                    <option value="cx" {% if product.unit == 'cx' %}selected{% endif %}>Caixa (cx)</option>
+                    <option value="">Selecione...</option>
+                    {% for u in units %}
+                    <option value="{{ u.id }}" {% if product.unit_fk_id == u.id or product.unit == u.abbreviation %}selected{% endif %}>{{ u.name }} ({{ u.abbreviation }})</option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="flex-col gap-2">

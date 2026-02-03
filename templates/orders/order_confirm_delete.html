@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Excluir Pedido - Própolis do Frei{% endblock %}
+
+{% block breadcrumbs %}
+<span style="color: #a3a3a3;">Início / Pedidos / </span> <span style="font-weight: 600;">Excluir</span>
+{% endblock %}
+
+{% block content %}
+<div class="flex-col gap-6" style="max-width: 600px; margin: 0 auto;">
+    <div class="flex items-center gap-4">
+        <a href="{% url 'order_list' %}" class="btn btn-outline p-2">
+            <i data-lucide="arrow-left"></i>
+        </a>
+        <h1 style="font-size: 1.875rem; font-weight: 700; color: #b91c1c;">Excluir Pedido</h1>
+    </div>
+
+    <div class="card flex-col gap-6">
+        <div class="flex-col gap-4 items-center text-center p-6">
+            <div style="background: #fee2e2; color: #991b1b; padding: 1rem; border-radius: 50%;">
+                <i data-lucide="alert-triangle" style="width: 48px; height: 48px;"></i>
+            </div>
+
+            <h2 style="font-size: 1.25rem; font-weight: 600;">Tem certeza que deseja excluir?</h2>
+
+            <p style="color: #666; font-size: 1rem;">
+                Você está prestes a excluir o pedido <strong style="color: #1f2937;">{{ order.order_number }}</strong>.
+                <br>
+                Esta ação <span style="font-weight: 700; color: #b91c1c;">não pode ser desfeita</span>.
+            </p>
+
+            <div style="background: #f3f4f6; padding: 1rem; border-radius: 0.5rem; width: 100%; text-align: left;">
+                <div class="flex justify-between mb-2">
+                    <span style="color: #666;">Data:</span>
+                    <span style="font-weight: 600;">{{ order.created_at|date:"d/m/Y H:i" }}</span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span style="color: #666;">Total:</span>
+                    <span style="font-weight: 600;">R$ {{ order.total_amount }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span style="color: #666;">Status:</span>
+                    <span style="font-weight: 600;">{{ order.get_status_display }}</span>
+                </div>
+            </div>
+        </div>
+
+        <form method="post" class="flex justify-end gap-3"
+            style="border-top: 1px solid var(--border); padding-top: 1.5rem;">
+            {% csrf_token %}
+            <a href="{% url 'order_list' %}" class="btn btn-outline">Cancelar</a>
+            <button type="submit" class="btn" style="background: #ef4444; color: white; border: none;">
+                <i data-lucide="trash-2"></i> Confirmar Exclusão
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

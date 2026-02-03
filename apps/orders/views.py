@@ -165,3 +165,21 @@ def order_cancel(request, pk):
         order.save()
         messages.success(request, 'Pedido cancelado.')
     return redirect('order_detail', pk=pk)
+
+@login_required
+def order_delete(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    
+    # Restrict deletion to pending or canceled orders
+    if order.status not in ['pendente', 'cancelado']:
+        messages.error(request, 'Apenas pedidos pendentes ou cancelados podem ser excluídos.')
+        return redirect('order_detail', pk=pk)
+        
+    if request.method == 'POST':
+        order_number = order.order_number
+        order.delete()
+        messages.success(request, f'Pedido {order_number} excluído com sucesso.')
+        return redirect('order_list')
+        
+    context = {'order': order}
+    return render(request, 'orders/order_confirm_delete.html', context)

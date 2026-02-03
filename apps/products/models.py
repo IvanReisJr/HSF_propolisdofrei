@@ -10,6 +10,12 @@ class ProductStatus(models.TextChoices):
     INACTIVE = 'inactive', _('Inativo')
 
 
+class ActiveManager(models.Manager):
+    """Manager para retornar apenas produtos não deletados"""
+    def get_queryset(self):
+        return super().get_queryset().filter(is_active=True)
+
+
 class Product(models.Model):
     """
     Modelo para produtos.
@@ -32,6 +38,14 @@ class Product(models.Model):
         max_length=10,
         default='un',
         help_text=_('Unidade de medida (un, kg, l, etc.)')
+    )
+    unit_fk = models.ForeignKey(
+        'core.UnitOfMeasure',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name=_('Unidade (Normalizada)'),
+        related_name='products'
     )
     cost_price = models.DecimalField(
         _('Preço de Custo'),
@@ -56,8 +70,16 @@ class Product(models.Model):
         choices=ProductStatus.choices,
         default=ProductStatus.ACTIVE
     )
+    
+    # Soft Delete
+    is_active = models.BooleanField(_('Ativo (Soft Delete)'), default=True)
+    
     created_at = models.DateTimeField(_('Criado em'), auto_now_add=True)
     updated_at = models.DateTimeField(_('Atualizado em'), auto_now=True)
+
+    # Managers
+    objects = ActiveManager()    # Default manager returns only active
+    all_objects = models.Manager() # Returns everything including deleted
 
     class Meta:
         db_table = 'products'
@@ -67,6 +89,11 @@ class Product(models.Model):
 
     def __str__(self):
         return f"{self.code} - {self.name}"
+        
+    def delete(self, using=None, keep_parents=False):
+        """Soft delete: apenas marca como inativo"""
+        self.is_active = False
+        self.save()
 
     def get_total_stock(self):
         """Retorna estoque total em todos os estabelecimentos"""

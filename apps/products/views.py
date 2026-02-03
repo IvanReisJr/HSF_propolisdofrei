@@ -70,11 +70,22 @@ def product_create(request):
             name=name,
             code=code,
             category=category,
-            unit=unit,
+            unit=unit, # Will be ID if from dropdown, need to fix?
             cost_price=cost_price,
             sale_price=sale_price,
             min_stock=min_stock
         )
+        
+        # Handle Unit FK
+        if unit:
+            try:
+                from apps.core.models import UnitOfMeasure
+                unit_obj = UnitOfMeasure.objects.get(id=unit)
+                product.unit_fk = unit_obj
+                product.unit = unit_obj.abbreviation
+                product.save()
+            except:
+                pass
         
         # Initialize stock as 0 for all establishments
         for est in Establishment.objects.all():
@@ -84,6 +95,9 @@ def product_create(request):
         return redirect('product_list')
         
     categories = Category.objects.all()
+    from apps.core.models import UnitOfMeasure
+    units = UnitOfMeasure.objects.all()
+    
     # Generate next code for display
     product_count = Product.objects.count()
     next_number = product_count + 1
@@ -91,6 +105,7 @@ def product_create(request):
     
     context = {
         'categories': categories,
+        'units': units,
         'next_code': next_code
     }
     return render(request, 'products/product_form.html', context)
@@ -102,7 +117,19 @@ def product_edit(request, pk):
         product.name = request.POST.get('name')
         product.code = request.POST.get('code')
         product.category_id = request.POST.get('category')
-        product.unit = request.POST.get('unit')
+        
+        # Handle Unit FK
+        unit_id = request.POST.get('unit')
+        if unit_id:
+            try:
+                # If it's a UUID, use it directly (from new dropdown)
+                product.unit_fk_id = unit_id
+                # Update char field for compatibility
+                product.unit = product.unit_fk.abbreviation
+            except:
+                # Fallback if text passed (legacy)
+                product.unit = unit_id
+                
         product.cost_price = request.POST.get('cost_price')
         product.sale_price = request.POST.get('sale_price')
         product.min_stock = request.POST.get('min_stock')
@@ -113,9 +140,13 @@ def product_edit(request, pk):
         return redirect('product_list')
         
     categories = Category.objects.all()
+    from apps.core.models import UnitOfMeasure
+    units = UnitOfMeasure.objects.all()
+    
     context = {
         'product': product,
         'categories': categories,
+        'units': units,
         'is_edit': True
     }
     return render(request, 'products/product_form.html', context)

@@ -3,6 +3,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from decimal import Decimal
+from apps.core.models import Sequence  # Import Sequence
 
 
 class OrderStatus(models.TextChoices):
@@ -68,23 +69,16 @@ class Order(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.order_number:
-            # Gerar um número de pedido legível: PED-AAAAMMDD-XXXX
+            # Atomicamente obter o pŕoximo número sequencial do dia
             now = timezone.now()
             today_str = now.strftime('%Y%m%d')
+            sequence_key = f'order_{today_str}'
             
-            # Contagem simples para o dia
-            count = Order.objects.filter(
-                created_at__year=now.year,
-                created_at__month=now.month,
-                created_at__day=now.day
-            ).count() + 1
+            # Usar select_for_update via Sequence model
+            seq_num = Sequence.get_next_value(sequence_key)
             
-            self.order_number = f"PED-{today_str}-{count:04d}"
-            
-            # Garantir unicidade em caso de concorrência ou deleções
-            while Order.objects.filter(order_number=self.order_number).exists():
-                count += 1
-                self.order_number = f"PED-{today_str}-{count:04d}"
+            # Formatar: PED-AAAAMMDD-XXXX
+            self.order_number = f"PED-{today_str}-{seq_num:04d}"
                 
         super().save(*args, **kwargs)
 
