@@ -11,7 +11,7 @@ def movement_list(request):
     if user.is_super_user_role():
         movements = StockMovement.objects.all().order_by('-created_at')
     else:
-        movements = StockMovement.objects.filter(establishment=user.establishment).order_by('-created_at')
+        movements = StockMovement.objects.filter(product__distributor=user.distributor).order_by('-created_at')
     
     context = {'movements': movements}
     return render(request, 'stock/movement_list.html', context)
@@ -59,11 +59,9 @@ def movement_create(request):
         return redirect('movement_list')
         
     products = Product.objects.filter(status='active')
-    # If not superuser, limited to their establishment
-    if request.user.is_super_user_role():
-        establishments = Establishment.objects.all()
-    else:
-        establishments = Establishment.objects.filter(id=request.user.establishment.id)
+    if not request.user.is_super_user_role():
+        products = products.filter(distributor=request.user.distributor)
+    establishments = Establishment.objects.all()
         
     context = {
         'products': products,

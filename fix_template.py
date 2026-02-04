@@ -1,28 +1,160 @@
+
 import os
 
-file_path = r'templates\products\product_list.html'
+content = """{% extends "base.html" %}
 
-try:
-    with open(file_path, 'r', encoding='utf-8') as f:
-        content = f.read()
-    
-    # Fix the syntax error
-    content = content.replace(
-        'selected_category==category.id|stringformat:"s"',
-        'selected_category == category.id|stringformat:"s"'
-    )
-    
-    with open(file_path, 'w', encoding='utf-8') as f:
-        f.write(content)
-    
-    print("✓ File fixed successfully!")
-    
-    # Verify the fix
-    with open(file_path, 'r', encoding='utf-8') as f:
-        if 'selected_category ==' in f.read():
-            print("✓ Verification passed - spaces added")
-        else:
-            print("✗ Verification failed")
-            
-except Exception as e:
-    print(f"Error: {e}")
+{% block title %}{% if is_edit %}Editar Produto{% else %}Novo Produto{% endif %} - Própolis do Frei{% endblock %}
+
+{% block breadcrumbs %}
+<a href="{% url 'dashboard' %}" class="hover:text-primary transition-colors"
+    style="color: #a3a3a3; text-decoration: none;">Início</a> <span style="color: #a3a3a3;"> / </span> <a
+    href="{% url 'product_list' %}" class="hover:text-primary transition-colors"
+    style="color: #a3a3a3; text-decoration: none;">Produtos</a> <span style="color: #a3a3a3;"> / </span> <span
+    style="font-weight: 600;">{% if is_edit %}Editar{% else %}Novo{% endif %}</span>
+{% endblock %}
+
+{% block content %}
+<div class="flex-col gap-6" style="max-width: 800px; margin: 0 auto;">
+    <div class="flex items-center gap-4">
+        <a href="{% url 'product_list' %}" class="btn btn-outline p-2">
+            <i data-lucide="arrow-left"></i>
+        </a>
+        <h1 style="font-size: 1.875rem; font-weight: 700;">{% if is_edit %}Editar Produto{% else %}Novo Produto{% endif %}</h1>
+    </div>
+
+    <form method="post" class="card flex-col gap-6">
+        {% csrf_token %}
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <div class="flex-col gap-2">
+                <label class="label">Nome do Produto</label>
+                <input type="text" name="name" value="{{ product.name }}" class="input" placeholder="Ex: Própolis 30ml"
+                    required>
+            </div>
+
+            <div class="flex-col gap-2">
+                <label class="label">Código Único</label>
+                {% if is_edit %}
+                <input type="text" name="code" value="{{ product.code }}" class="input" placeholder="Ex: PRO30"
+                    required>
+                {% else %}
+                <input type="text" value="{{ next_code }}" class="input" disabled
+                    style="background: #f3f4f6; color: #666;">
+                <p style="font-size: 0.75rem; color: #666; margin-top: 0.25rem;">Código gerado automaticamente</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <div class="flex-col gap-2">
+                <label class="label">Categoria</label>
+                <select name="category" class="input" required>
+                    <option value="">Selecione...</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if product.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex-col gap-2">
+                <label class="label">Unidade de Medida</label>
+                <select name="unit" class="input" required>
+                    <option value="">Selecione...</option>
+                    {% for u in units %}
+                    <option value="{{ u.id }}" {% if product.unit_fk_id == u.id or product.unit == u.abbreviation %}selected{% endif %}>{{ u.name }} ({{ u.abbreviation }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem;">
+            <div class="flex-col gap-2">
+                <label class="label">Matriz</label>
+                <select name="distributor" class="input">
+                    <option value="">Selecione...</option>
+                    {% for dist in distributors %}
+                    <option value="{{ dist.id }}" {% if product.distributor_id == dist.id %}selected{% endif %}>{{ dist.name }}</option>
+                    {% endfor %}
+                </select>
+                <p style="font-size: 0.75rem; color: #666; margin-top: 0.25rem;">Apenas Matrizes disponíveis</p>
+            </div>
+
+            <div class="flex-col gap-2">
+                <label class="label">Embalagem</label>
+                <select name="packaging" class="input">
+                    <option value="">Selecione...</option>
+                    {% for pkg in packagings %}
+                    <option value="{{ pkg.id }}" {% if product.packaging_id == pkg.id %}selected{% endif %}>{{ pkg.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex-col gap-2">
+                <label class="label">Status</label>
+                <select name="status" class="input">
+                    <option value="active" {% if product.status == 'active' %}selected{% endif %}>Ativo</option>
+                    <option value="inactive" {% if product.status == 'inactive' %}selected{% endif %}>Inativo</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem;">
+            <div class="flex-col gap-2">
+                <label class="label">Preço de Custo (R$)</label>
+                <input type="number" step="0.01" name="cost_price"
+                    value="{{ product.cost_price|stringformat:'.2f'|default:'0.00' }}" class="input" required>
+            </div>
+
+            <div class="flex-col gap-2">
+                <label class="label">Preço de Venda (R$)</label>
+                <input type="number" step="0.01" name="sale_price"
+                    value="{{ product.sale_price|stringformat:'.2f'|default:'0.00' }}" class="input" required>
+            </div>
+
+            <div class="flex-col gap-2">
+                <label class="label">Estoque Mínimo</label>
+                <input type="number" name="min_stock" value="{{ product.min_stock|default:'10' }}" class="input"
+                    required>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center"
+            style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-top: 1rem;">
+            <div>
+                {% if is_edit %}
+                <a href="{% url 'product_delete' product.pk %}" class="btn btn-outline"
+                    style="color: #ef4444; border-color: #ef4444;">
+                    <i data-lucide="trash-2"></i> Inativar
+                </a>
+                {% endif %}
+            </div>
+            <div class="flex gap-3">
+                <a href="{% url 'product_list' %}" class="btn btn-outline">Cancelar</a>
+                <button type="submit" class="btn btn-primary">
+                    <i data-lucide="save"></i> Salvar Produto
+                </button>
+            </div>
+    </form>
+</div>
+
+<style>
+    .label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #404040;
+    }
+</style>
+{% endblock %}
+"""
+
+# Path to the file
+file_path = os.path.join('templates', 'products', 'product_form.html')
+
+with open(file_path, 'w', encoding='utf-8') as f:
+    f.write(content)
+
+print(f"Successfully wrote {len(content)} bytes to {file_path}")
+print("Line 63 check:")
+for line in content.splitlines():
+    if "product.unit_fk_id" in line:
+        print(line)

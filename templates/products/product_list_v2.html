@@ -38,15 +38,14 @@
             <select name="category" class="input" style="width: 200px;">
                 <option value="">Todas Categorias</option>
                 {% for category in categories %}
-                <option value="{{ category.id }}" {% if selected_category==category.id|stringformat:"s" %}selected{%
-                    endif %}>{{ category.name }}</option>
+                <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
                 {% endfor %}
             </select>
 
             <select name="status" class="input" style="width: 150px;">
-                <option value="all" {% if selected_status=='all' %}selected{% endif %}>Todos</option>
-                <option value="active" {% if selected_status=='active' %}selected{% endif %}>Ativos</option>
-                <option value="inactive" {% if selected_status=='inactive' %}selected{% endif %}>Inativos</option>
+                <option value="all" {% if selected_status == 'all' %}selected{% endif %}>Todos</option>
+                <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Ativos</option>
+                <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inativos</option>
             </select>
 
             <button type="submit" class="btn btn-outline">Filtrar</button>

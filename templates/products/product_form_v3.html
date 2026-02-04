@@ -16,7 +16,8 @@
         <a href="{% url 'product_list' %}" class="btn btn-outline p-2">
             <i data-lucide="arrow-left"></i>
         </a>
-        <h1 style="font-size: 1.875rem; font-weight: 700;">{% if is_edit %}Editar Produto{% else %}Novo Produto{% endif %}</h1>
+        <h1 style="font-size: 1.875rem; font-weight: 700;">{% if is_edit %}Editar Produto{% else %}Novo Produto{% endif
+            %}</h1>
     </div>
 
     <form method="post" class="card flex-col gap-6">
@@ -48,7 +49,8 @@
                 <select name="category" class="input" required>
                     <option value="">Selecione...</option>
                     {% for cat in categories %}
-                    <option value="{{ cat.id }}" {% if product.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                    <option value="{{ cat.id }}" {% if product.category_id==cat.id %}selected{% endif %}>{{ cat.name }}
+                    </option>
                     {% endfor %}
                 </select>
             </div>
@@ -58,7 +60,8 @@
                 <select name="unit" class="input" required>
                     <option value="">Selecione...</option>
                     {% for u in units %}
-                    <option value="{{ u.id }}" {% if product.unit_fk_id == u.id or product.unit == u.abbreviation %}selected{% endif %}>{{ u.name }} ({{ u.abbreviation }})</option>
+                    <option value="{{ u.id }}" {% if product.unit_fk_id==u.id or product.unit==u.abbreviation
+                        %}selected{% endif %}>{{ u.name }} ({{ u.abbreviation }})</option>
                     {% endfor %}
                 </select>
             </div>
@@ -70,7 +73,8 @@
                 <select name="distributor" class="input">
                     <option value="">Selecione...</option>
                     {% for dist in distributors %}
-                    <option value="{{ dist.id }}" {% if product.distributor_id == dist.id %}selected{% endif %}>{{ dist.name }}</option>
+                    <option value="{{ dist.id }}" {% if product.distributor_id==dist.id %}selected{% endif %}>{{
+                        dist.name }}</option>
                     {% endfor %}
                 </select>
                 <p style="font-size: 0.75rem; color: #666; margin-top: 0.25rem;">Apenas Matrizes disponíveis</p>
@@ -81,7 +85,8 @@
                 <select name="packaging" class="input">
                     <option value="">Selecione...</option>
                     {% for pkg in packagings %}
-                    <option value="{{ pkg.id }}" {% if product.packaging_id == pkg.id %}selected{% endif %}>{{ pkg.name }}</option>
+                    <option value="{{ pkg.id }}" {% if product.packaging_id==pkg.id %}selected{% endif %}>{{ pkg.name }}
+                    </option>
                     {% endfor %}
                 </select>
             </div>
@@ -89,8 +94,8 @@
             <div class="flex-col gap-2">
                 <label class="label">Status</label>
                 <select name="status" class="input">
-                    <option value="active" {% if product.status == 'active' %}selected{% endif %}>Ativo</option>
-                    <option value="inactive" {% if product.status == 'inactive' %}selected{% endif %}>Inativo</option>
+                    <option value="active" {% if product.status=='active' %}selected{% endif %}>Ativo</option>
+                    <option value="inactive" {% if product.status=='inactive' %}selected{% endif %}>Inativo</option>
                 </select>
             </div>
         </div>

@@ -181,7 +181,12 @@ class ProductStock(models.Model):
         db_table = 'product_stocks'
         verbose_name = _('Estoque de Produto')
         verbose_name_plural = _('Estoques de Produtos')
-        unique_together = ['product', 'establishment']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['product', 'establishment'],
+                name='unique_product_establishment'
+            )
+        ]
 
     def __str__(self):
         return f"{self.product.name} - {self.establishment.name}: {self.current_stock}"

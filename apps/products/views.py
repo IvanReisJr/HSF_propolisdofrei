@@ -1,117 +1,118 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import Product, ProductStock, Packaging
+from django.db.models import Max
+from .models import Product, Packaging, ProductStock
 from apps.categories.models import Category
+from apps.distributors.models import Distributor
+from apps.core.models import UnitOfMeasure
 from apps.establishments.models import Establishment
-from django.db.models import Q
 
 @login_required
 def product_list(request):
-    query = request.GET.get('q', '')
-    category_id = request.GET.get('category', '')
-    status = request.GET.get('status', 'active')
+    products = Product.objects.all().select_related('category', 'unit_fk', 'packaging')
     
-    products = Product.objects.all()
-    
-    if query:
-        products = products.filter(
-            Q(name__icontains=query) | Q(code__icontains=query)
-        )
-    
-    if category_id:
-        products = products.filter(category_id=category_id)
+    # Isolation: Non-superusers see only their distributor's products
+    if not request.user.is_super_user_role():
+        products = products.filter(distributor=request.user.distributor)
         
-    if status and status != 'all':
-        products = products.filter(status=status)
-        
-    categories = Category.objects.all()
-    
-    context = {
-        'products': products,
-        'categories': categories,
-        'query': query,
-        'selected_category': category_id,
-        'selected_status': status,
-    }
-    return render(request, 'products/product_list.html', context)
-
-@login_required
-def product_detail(request, pk):
-    product = get_object_or_404(Product, pk=pk)
-    # Get stock for all establishments for this product
-    stocks = ProductStock.objects.filter(product=product)
-    
-    context = {
-        'product': product,
-        'stocks': stocks,
-    }
-    return render(request, 'products/product_detail.html', context)
+    return render(request, 'products/product_list_v2.html', {'products': products})
 
 @login_required
 def product_create(request):
     if request.method == 'POST':
-        # Simple manual form handling for now, can use ModelForm later
-        name = request.POST.get('name')
-        category_id = request.POST.get('category')
-        unit = request.POST.get('unit')
-        cost_price = request.POST.get('cost_price')
-        sale_price = request.POST.get('sale_price')
-        min_stock = request.POST.get('min_stock')
-        packaging_id = request.POST.get('packaging')
-        status = request.POST.get('status', 'active')
-        distributor_id = request.POST.get('distributor')
-        
-        category = get_object_or_404(Category, id=category_id)
-        
-        # Auto-generate code based on total count
-        product_count = Product.objects.count()
-        next_number = product_count + 1
-        code = f"PROD{next_number:05d}"
-        
-        product = Product.objects.create(
-            name=name,
-            code=code,
-            category=category,
-            unit=unit, # Will be ID if from dropdown, need to fix?
-            cost_price=cost_price,
-            sale_price=sale_price,
-            min_stock=min_stock,
-            packaging_id=packaging_id,
-            status=status,
-            distributor_id=distributor_id if distributor_id else None
-        )
-        
-        # Handle Unit FK
-        if unit:
-            try:
-                from apps.core.models import UnitOfMeasure
-                unit_obj = UnitOfMeasure.objects.get(id=unit)
-                product.unit_fk = unit_obj
-                product.unit = unit_obj.abbreviation
-                product.save()
-            except:
-                pass
-        
-        # Initialize stock as 0 for all establishments
-        for est in Establishment.objects.all():
-            ProductStock.objects.get_or_create(product=product, establishment=est, defaults={'current_stock': 0})
+        try:
+            name = request.POST.get('name')
+            category_id = request.POST.get('category')
+            unit_id = request.POST.get('unit')
+            cost_price = request.POST.get('cost_price')
+            sale_price = request.POST.get('sale_price')
+            min_stock = request.POST.get('min_stock')
+            packaging_id = request.POST.get('packaging')
+            status = request.POST.get('status', 'active')
+            distributor_id = request.POST.get('distributor')
             
-        messages.success(request, f'Produto {name} criado com sucesso!')
-        return redirect('product_list')
-        
+            # Isolation: Force user's distributor if not superuser
+            if not request.user.is_super_user_role():
+                distributor = request.user.distributor
+            else:
+                distributor = None
+                if distributor_id:
+                    distributor = get_object_or_404(Distributor, id=distributor_id)
+
+            # Fetch relational objects
+            category = get_object_or_404(Category, id=category_id)
+            
+            unit_obj = None
+            if unit_id:
+                unit_obj = get_object_or_404(UnitOfMeasure, id=unit_id)
+
+            packaging = None
+            if packaging_id:
+                packaging = get_object_or_404(Packaging, id=packaging_id)
+
+            # Robust Code Generation
+            # Find the last code used (including deleted ones via all_objects if available, or just rely on manual unique check loop)
+            # Product has 'all_objects' manager defined in models.py
+            last_prod = Product.all_objects.all().order_by('-code').first()
+            next_number = 1
+            if last_prod and last_prod.code.startswith('PROD'):
+                try:
+                    next_number = int(last_prod.code.replace('PROD', '')) + 1
+                except ValueError:
+                    pass
+            
+            code = f"PROD{next_number:05d}"
+            
+            # Conflict Check Loop
+            while Product.all_objects.filter(code=code).exists():
+                next_number += 1
+                code = f"PROD{next_number:05d}"
+            
+            product = Product(
+                name=name,
+                code=code,
+                category=category,
+                unit_fk=unit_obj,
+                unit=unit_obj.abbreviation if unit_obj else 'un',
+                cost_price=cost_price or 0,
+                sale_price=sale_price or 0,
+                min_stock=min_stock or 0,
+                packaging=packaging,
+                status=status,
+                distributor=distributor
+            )
+            product.save()
+
+            # Initialize stock as 0 for all establishments
+            for est in Establishment.objects.all():
+                ProductStock.objects.get_or_create(product=product, establishment=est, defaults={'current_stock': 0})
+                
+            messages.success(request, f'Produto {name} criado com sucesso! Código: {code}')
+            return redirect('product_list')
+
+        except Exception as e:
+            messages.error(request, f'Erro ao criar produto: {e}')
+            # Fall through to re-render form with entered data? 
+            # ideally we should pass values back to context, but for now simple re-render
+            pass 
+            
     categories = Category.objects.all()
-    from apps.core.models import UnitOfMeasure
     units = UnitOfMeasure.objects.all()
     packagings = Packaging.objects.filter(is_active=True)
+    try:
+        distributors = Distributor.objects.filter(distributor_type='headquarters', is_active=True).order_by('name')
+    except Exception:
+        distributors = Distributor.objects.filter(is_active=True).order_by('name')
     
-    # Get only Matriz (headquarters) distributors
-    from apps.distributors.models import Distributor
-    distributors = Distributor.objects.filter(distributor_type='headquarters', is_active=True).order_by('name')
-    
-    # Generate next code for display
-    product_count = Product.objects.count()
-    next_number = product_count + 1
+    # Generate next code for display (Preview)
+    last_prod = Product.all_objects.all().order_by('-code').first()
+    next_number = 1
+    if last_prod and last_prod.code.startswith('PROD'):
+        try:
+            next_number = int(last_prod.code.replace('PROD', '')) + 1
+        except ValueError:
+            pass
     next_code = f"PROD{next_number:05d}"
     
     context = {
@@ -125,31 +126,57 @@ def product_create(request):
 
 @login_required
 def product_edit(request, pk):
+    # Isolation: Check access
     product = get_object_or_404(Product, pk=pk)
+    if not request.user.is_super_user_role() and product.distributor != request.user.distributor:
+        messages.error(request, 'Você não tem permissão para editar este produto.')
+        return redirect('product_list')
     if request.method == 'POST':
         product.name = request.POST.get('name')
-        product.code = request.POST.get('code')
-        product.category_id = request.POST.get('category')
+        
+        # Only update code if explicitly changed (usually hidden/disabled or manual)
+        if request.POST.get('code'):
+             product.code = request.POST.get('code')
+             
+        if request.POST.get('category'):
+            product.category_id = request.POST.get('category')
         
         # Handle Unit FK
         unit_id = request.POST.get('unit')
         if unit_id:
             try:
-                # If it's a UUID, use it directly (from new dropdown)
-                product.unit_fk_id = unit_id
-                # Update char field for compatibility
-                product.unit = product.unit_fk.abbreviation
-            except:
-                # Fallback if text passed (legacy)
-                product.unit = unit_id
-                
+                unit_obj = UnitOfMeasure.objects.get(id=unit_id)
+                product.unit_fk = unit_obj
+                product.unit = unit_obj.abbreviation
+            except (ValueError, UnitOfMeasure.DoesNotExist):
+                pass
+        
+        # Handle Numbers
         product.cost_price = request.POST.get('cost_price')
         product.sale_price = request.POST.get('sale_price')
         product.min_stock = request.POST.get('min_stock')
-        product.status = request.POST.get('status')
+        product.status = request.POST.get('status') # active/inactive
 
-        product.packaging_id = request.POST.get('packaging')
-        product.distributor_id = request.POST.get('distributor') or None
+        # Handle Packaging
+        package_id = request.POST.get('packaging')
+        if package_id:
+            product.packaging_id = package_id
+        else:
+            product.packaging_id = None
+            
+        if package_id:
+            product.packaging_id = package_id
+        else:
+            product.packaging_id = None
+            
+        # Handle Distributor (Only Superusers can change it)
+        if request.user.is_super_user_role():
+            dist_id = request.POST.get('distributor')
+            if dist_id:
+                product.distributor_id = dist_id
+            else:
+                product.distributor_id = None
+        # Else: keep existing distributor (enforced by initial fetch)
         
         # Validations
         try:
@@ -168,19 +195,21 @@ def product_edit(request, pk):
             messages.error(request, 'Valores inválidos nos campos numéricos!')
             return redirect('product_edit', pk=pk)
         
-        product.save()
-        
-        messages.success(request, f'Produto {product.name} atualizado!')
-        return redirect('product_list')
+        try:
+            product.save()
+            messages.success(request, f'Produto {product.name} atualizado!')
+            return redirect('product_list')
+        except Exception as e:
+            messages.error(request, f'Erro ao salvar: {e}')
+            return redirect('product_edit', pk=pk)
         
     categories = Category.objects.all()
-    from apps.core.models import UnitOfMeasure
     units = UnitOfMeasure.objects.all()
     packagings = Packaging.objects.filter(is_active=True)
-    
-    # Get only Matriz (headquarters) distributors
-    from apps.distributors.models import Distributor
-    distributors = Distributor.objects.filter(distributor_type='headquarters', is_active=True).order_by('name')
+    try:
+        distributors = Distributor.objects.filter(distributor_type='headquarters', is_active=True).order_by('name')
+    except Exception:
+        distributors = Distributor.objects.filter(is_active=True).order_by('name')
     
     context = {
         'product': product,
@@ -193,57 +222,70 @@ def product_edit(request, pk):
     return render(request, 'products/product_form.html', context)
 
 @login_required
-def packaging_list(request):
-    packagings = Packaging.objects.all().order_by('name')
+def product_delete(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    
+    # Isolation: Check access
+    if not request.user.is_super_user_role() and product.distributor != request.user.distributor:
+        messages.error(request, 'Você não tem permissão para inativar este produto.')
+        return redirect('product_list')
+    if request.method == 'POST':
+        product.delete()
+        messages.success(request, 'Produto inativado com sucesso!')
+        return redirect('product_list')
+    return render(request, 'products/product_confirm_delete.html', {'product': product})
+
+@login_required
+def product_detail(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    
+    # Isolation: Check access
+    if not request.user.is_super_user_role() and product.distributor != request.user.distributor:
+        messages.error(request, 'Você não tem permissão para visualizar este produto.')
+        return redirect('product_list')
+    # Fetch related checks?
+    stock_movements = product.stock_movements.all().order_by('-created_at')[:10]
+    stocks = product.stocks.all()
     context = {
-        'packagings': packagings
+        'product': product,
+        'stock_movements': stock_movements,
+        'stocks': stocks
     }
-    return render(request, 'products/packaging_list.html', context)
+    return render(request, 'products/product_detail.html', context)
+
+# Packaging Views
+@login_required
+def packaging_list(request):
+    packagings = Packaging.objects.filter(is_active=True)
+    return render(request, 'products/packaging_list.html', {'packagings': packagings})
 
 @login_required
 def packaging_create(request):
     if request.method == 'POST':
         name = request.POST.get('name')
-        is_active = request.POST.get('is_active') == 'on'
-        
         if name:
-            Packaging.objects.create(name=name, is_active=is_active)
-            messages.success(request, f'Embalagem "{name}" criada com sucesso!')
+            Packaging.objects.create(name=name)
+            messages.success(request, 'Embalagem criada com sucesso!')
             return redirect('packaging_list')
-        else:
-            messages.error(request, 'Nome é obrigatório.')
-            
     return render(request, 'products/packaging_form.html')
 
 @login_required
 def packaging_edit(request, pk):
     packaging = get_object_or_404(Packaging, pk=pk)
-    
     if request.method == 'POST':
-        packaging.name = request.POST.get('name')
-        packaging.is_active = request.POST.get('is_active') == 'on'
-        packaging.save()
-        messages.success(request, f'Embalagem "{packaging.name}" atualizada!')
-        return redirect('packaging_list')
-        
-    context = {
-        'packaging': packaging,
-        'is_edit': True
-    }
-    return render(request, 'products/packaging_form.html', context)
+        name = request.POST.get('name')
+        if name:
+            packaging.name = name
+            packaging.save()
+            messages.success(request, 'Embalagem atualizada!')
+            return redirect('packaging_list')
+    return render(request, 'products/packaging_form.html', {'packaging': packaging})
 
 @login_required
-def product_delete(request, pk):
-    """Soft delete - inativa o produto ao invés de deletar"""
-    product = get_object_or_404(Product, pk=pk)
-    
+def packaging_delete(request, pk):
+    packaging = get_object_or_404(Packaging, pk=pk)
     if request.method == 'POST':
-        product.status = 'inactive'
-        product.save()
-        messages.success(request, f'Produto "{product.name}" inativado com sucesso!')
-        return redirect('product_list')
-    
-    context = {
-        'product': product
-    }
-    return render(request, 'products/product_confirm_delete.html', context)
+        packaging.delete()
+        messages.success(request, 'Embalagem removida!')
+        return redirect('packaging_list')
+    return render(request, 'products/packaging_confirm_delete.html', {'packaging': packaging})
