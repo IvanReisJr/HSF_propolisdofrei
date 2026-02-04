@@ -3,6 +3,12 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 
+class DistributorType(models.TextChoices):
+    """Tipos de distribuidor para controle de permissões"""
+    HEADQUARTERS = 'headquarters', _('Matriz')
+    BRANCH = 'branch', _('Filial')
+
+
 class Distributor(models.Model):
     """
     Modelo para distribuidores/clientes internos.
@@ -24,6 +30,13 @@ class Distributor(models.Model):
     city = models.CharField(_('Cidade'), max_length=100, blank=True, null=True)
     state = models.CharField(_('Estado'), max_length=2, blank=True, null=True)
     notes = models.TextField(_('Observações'), blank=True, null=True)
+    distributor_type = models.CharField(
+        _('Tipo'),
+        max_length=20,
+        choices=DistributorType.choices,
+        default=DistributorType.BRANCH,
+        help_text=_('Matriz tem permissões especiais no sistema')
+    )
     is_active = models.BooleanField(_('Ativo'), default=True)
     created_at = models.DateTimeField(_('Criado em'), auto_now_add=True)
     updated_at = models.DateTimeField(_('Atualizado em'), auto_now=True)

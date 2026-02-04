@@ -1,0 +1,45 @@
+===========================================================
+PROJETO: HSF_propolisdofrei - DOCUMENTAÇÃO DE REFERÊNCIA
+===========================================================
+Data de Criação: 04/02/2026
+Objetivo: Padronização de arquitetura Django 5.x e Prevenção de Erros.
+
+1. ARQUITETURA DE USUÁRIO (CustomUser)
+-----------------------------------------------------------
+- Herança: AbstractUser.
+- Campo Chave: 'unidade' (ForeignKey para Distribuidor).
+- Regra: O campo 'unidade' é obrigatório para funcionários e opcional para Superusers.
+- Configuração Settings: AUTH_USER_MODEL = 'seu_app.CustomUser'
+
+2. PROTOCOLO DE SEGURANÇA (Skill: django-test-guard)
+-----------------------------------------------------------
+Toda alteração solicitada à IA deve passar pelo seguinte crivo:
+- Verificação de Isenção de Circular Imports.
+- Validação de isolamento de dados (Multitenancy).
+- Garantia de que o filtro de 'unidade' está sendo aplicado no QuerySet.
+- Validação de Migrations para evitar IntegrityError em bancos existentes.
+
+3. ESTRUTURA DE ESTOQUE (Regras de Negócio)
+-----------------------------------------------------------
+- Tabela: Estoque (Relação entre Distribuidor e Produto).
+- Constraint: UniqueConstraint(fields=['distribuidor', 'produto']).
+- Categorias Identificadas (Baseado na Interface):
+    * Extrato Líquido, Própolis em Pó, Própolis em Cápsulas, 
+      Própolis In Natura, Pomada de Própolis, Café, 
+      Hidratante Facial, Hidratante Corporal.
+
+4. TESTES DE INTEGRAÇÃO (O "Guarda")
+-----------------------------------------------------------
+Sempre rodar o comando: python manage.py test
+O arquivo tests.py deve validar:
+- Se um usuário da Unidade A consegue ver dados da Unidade B (deve falhar).
+- Se o login e permissões do CustomUser estão ativos.
+
+5. PROMPT MESTRE PARA FUTURAS SOLICITAÇÕES
+-----------------------------------------------------------
+"Atue como Django Expert no projeto C:\IvanReis\Sistemas_HSF\HSF_propolisdofrei.
+Use a skill django-pro e a lógica django-test-guard. 
+Antes de gerar o código para [SOLICITAÇÃO], valide se a mudança respeita o 
+isolamento por 'Unidade Distribuidora' e se não quebrará as migrations do 
+CustomUser. Se houver risco de erro, descreva o risco antes de gerar o código."
+===========================================================

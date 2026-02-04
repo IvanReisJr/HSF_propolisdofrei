@@ -9,4 +9,5 @@ urlpatterns = [
     # Product detail/edit - parameterized paths LAST
     path('<uuid:pk>/', views.product_detail, name='product_detail'),
     path('<uuid:pk>/edit/', views.product_edit, name='product_edit'),
+    path('<uuid:pk>/delete/', views.product_delete, name='product_delete'),
 ]

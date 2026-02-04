@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Inativar Produto - Própolis do Frei{% endblock %}
+
+{% block breadcrumbs %}
+<a href="{% url 'dashboard' %}" class="hover:text-primary transition-colors"
+    style="color: #a3a3a3; text-decoration: none;">Início</a> <span style="color: #a3a3a3;"> / </span> <a
+    href="{% url 'product_list' %}" class="hover:text-primary transition-colors"
+    style="color: #a3a3a3; text-decoration: none;">Produtos</a> <span style="color: #a3a3a3;"> / </span> <span
+    style="font-weight: 600;">Inativar</span>
+{% endblock %}
+
+{% block content %}
+<div class="flex-col gap-6" style="max-width: 600px; margin: 0 auto;">
+    <div class="card p-6">
+        <div class="flex-col gap-4" style="text-align: center;">
+            <div
+                style="width: 64px; height: 64px; background: #FEE2E2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                <i data-lucide="alert-triangle" style="width: 32px; height: 32px; color: #DC2626;"></i>
+            </div>
+
+            <h1 style="font-size: 1.5rem; font-weight: 700; color: #4B3621;">Inativar Produto?</h1>
+
+            <div class="flex-col gap-2"
+                style="background: #F3F4F6; padding: 1rem; border-radius: 8px; text-align: left;">
+                <p style="font-weight: 600; color: #4B3621;">{{ product.name }}</p>
+                <p style="font-size: 0.875rem; color: #666;">Código: {{ product.code }}</p>
+                <p style="font-size: 0.875rem; color: #666;">Categoria: {{ product.category.name }}</p>
+            </div>
+
+            <p style="color: #666; font-size: 0.875rem;">
+                O produto será marcado como <strong>inativo</strong> e não aparecerá mais nas listagens e seleções.
+                Você poderá reativá-lo posteriormente se necessário.
+            </p>
+
+            <form method="post" class="flex gap-3 justify-center" style="margin-top: 1rem;">
+                {% csrf_token %}
+                <a href="{% url 'product_list' %}" class="btn btn-outline">Cancelar</a>
+                <button type="submit" class="btn" style="background: #DC2626; color: white;">
+                    <i data-lucide="x-circle"></i> Inativar Produto
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

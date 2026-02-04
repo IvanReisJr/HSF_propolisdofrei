@@ -3,7 +3,8 @@
 {% block title %}Distribuidores - Própolis do Frei{% endblock %}
 
 {% block breadcrumbs %}
-<span style="color: #a3a3a3;">Cadastros / </span> <span style="font-weight: 600; color: var(--primary);">Distribuidores</span>
+<span style="color: #a3a3a3;">Cadastros / </span> <span
+    style="font-weight: 600; color: var(--primary);">Distribuidores</span>
 {% endblock %}
 
 {% block content %}
@@ -22,12 +23,27 @@
         <table style="width: 100%; border-collapse: collapse;">
             <thead>
                 <tr style="background: #2C1810; color: #F3E5AB;">
-                    <th style="padding: 1rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Código</th>
-                    <th style="padding: 1rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Nome</th>
-                    <th style="padding: 1rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Contato</th>
-                    <th style="padding: 1rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Cidade/UF</th>
-                    <th style="padding: 1rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Status</th>
-                    <th style="padding: 1rem; text-align: right; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Ações</th>
+                    <th
+                        style="padding: 1rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Código</th>
+                    <th
+                        style="padding: 1rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Nome</th>
+                    <th
+                        style="padding: 1rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Contato</th>
+                    <th
+                        style="padding: 1rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Cidade/UF</th>
+                    <th
+                        style="padding: 1rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Tipo</th>
+                    <th
+                        style="padding: 1rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Status</th>
+                    <th
+                        style="padding: 1rem; text-align: right; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -37,30 +53,47 @@
                     <td style="padding: 1rem; font-weight: 600; color: #4B3621;">{{ distributor.name }}</td>
                     <td style="padding: 1rem; font-size: 0.8125rem;">
                         <div class="flex-col gap-1">
-                            <span class="flex items-center gap-2" style="color: #4B3621;"><i data-lucide="phone" style="width: 12px;"></i> {{ distributor.phone|default:"---" }}</span>
-                            <span class="flex items-center gap-2" style="color: #666;"><i data-lucide="mail" style="width: 12px;"></i> {{ distributor.email|default:"---" }}</span>
+                            <span class="flex items-center gap-2" style="color: #4B3621;"><i data-lucide="phone"
+                                    style="width: 12px;"></i> {{ distributor.phone|default:"---" }}</span>
+                            <span class="flex items-center gap-2" style="color: #666;"><i data-lucide="mail"
+                                    style="width: 12px;"></i> {{ distributor.email|default:"---" }}</span>
                         </div>
                     </td>
                     <td style="padding: 1rem; color: #666;">
-                        {% if distributor.city %}{{ distributor.city }}{% if distributor.state %} / {{ distributor.state }}{% endif %}{% else %}-{% endif %}
+                        {% if distributor.city or distributor.state %}
+                        {{ distributor.city|default:"" }}{% if distributor.city and distributor.state %} / {% endif %}{{ distributor.state|default:"" }}
+                        {% else %}-{% endif %}
+                    </td>
+                    <td style="padding: 1rem;">
+                        {% if distributor.distributor_type == 'headquarters' %}
+                        <span
+                            style="background: #DBEAFE; color: #1E40AF; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Matriz</span>
+                        {% else %}
+                        <span
+                            style="background: #F3F4F6; color: #4B5563; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Filial</span>
+                        {% endif %}
                     </td>
                     <td style="padding: 1rem;">
                         {% if distributor.is_active %}
-                        <span style="background: #D1FAE5; color: #065F46; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Ativo</span>
+                        <span
+                            style="background: #D1FAE5; color: #065F46; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Ativo</span>
                         {% else %}
-                        <span style="background: #FEE2E2; color: #991B1B; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Inativa</span>
+                        <span
+                            style="background: #FEE2E2; color: #991B1B; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Inativa</span>
                         {% endif %}
                     </td>
                     <td style="padding: 1rem; text-align: right;">
-                        <a href="{% url 'distributor_edit' distributor.pk %}" class="btn btn-sm btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                        <a href="{% url 'distributor_edit' distributor.pk %}" class="btn btn-sm btn-outline"
+                            style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
                             <i data-lucide="edit-2" style="width: 14px;"></i>
                         </a>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6" style="padding: 3rem; text-align: center; color: #a3a3a3;">
-                        <i data-lucide="users" style="width: 32px; height: 32px; opacity: 0.3; margin-bottom: 0.5rem;"></i>
+                    <td colspan="7" style="padding: 3rem; text-align: center; color: #a3a3a3;">
+                        <i data-lucide="users"
+                            style="width: 32px; height: 32px; opacity: 0.3; margin-bottom: 0.5rem;"></i>
                         <p>Nenhum distribuidor cadastrado.</p>
                     </td>
                 </tr>

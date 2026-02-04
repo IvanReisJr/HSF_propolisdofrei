@@ -63,6 +63,15 @@ class Product(models.Model):
         related_name='products',
         help_text=_('Tipo de embalagem do produto')
     )
+    distributor = models.ForeignKey(
+        'distributors.Distributor',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name=_('Matriz'),
+        related_name='products',
+        help_text=_('Matriz proprietária deste produto')
+    )
     unit = models.CharField(
         _('Unidade'),
         max_length=10,

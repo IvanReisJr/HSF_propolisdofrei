@@ -20,6 +20,7 @@ def distributor_create(request):
         city = request.POST.get('city', '').strip()
         state = request.POST.get('state', '').strip()
         notes = request.POST.get('notes', '').strip()
+        distributor_type = request.POST.get('distributor_type', 'branch')
         
         # Auto-generate code
         dist_count = Distributor.objects.count()
@@ -40,7 +41,8 @@ def distributor_create(request):
                 address=address,
                 city=city,
                 state=state,
-                notes=notes
+                notes=notes,
+                distributor_type=distributor_type
             )
             messages.success(request, f'Distribuidor "{name}" criado com sucesso no estado {state}!')
             return redirect('distributor_list')
@@ -74,6 +76,7 @@ def distributor_edit(request, pk):
         new_state = request.POST.get('state', '').strip()
         new_notes = request.POST.get('notes', '').strip()
         new_active = request.POST.get('is_active') == 'on'
+        new_type = request.POST.get('distributor_type', 'branch')
         
         if new_code: distributor.code = new_code
         if new_name: distributor.name = new_name
@@ -84,6 +87,7 @@ def distributor_edit(request, pk):
         distributor.city = new_city
         if new_state: distributor.state = new_state
         distributor.notes = new_notes
+        distributor.distributor_type = new_type
         distributor.is_active = new_active
         
         try:

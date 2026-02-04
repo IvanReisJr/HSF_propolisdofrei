@@ -57,9 +57,10 @@ def product_create(request):
         unit = request.POST.get('unit')
         cost_price = request.POST.get('cost_price')
         sale_price = request.POST.get('sale_price')
-        sale_price = request.POST.get('sale_price')
         min_stock = request.POST.get('min_stock')
         packaging_id = request.POST.get('packaging')
+        status = request.POST.get('status', 'active')
+        distributor_id = request.POST.get('distributor')
         
         category = get_object_or_404(Category, id=category_id)
         
@@ -76,7 +77,9 @@ def product_create(request):
             cost_price=cost_price,
             sale_price=sale_price,
             min_stock=min_stock,
-            packaging_id=packaging_id
+            packaging_id=packaging_id,
+            status=status,
+            distributor_id=distributor_id if distributor_id else None
         )
         
         # Handle Unit FK
@@ -102,6 +105,10 @@ def product_create(request):
     units = UnitOfMeasure.objects.all()
     packagings = Packaging.objects.filter(is_active=True)
     
+    # Get only Matriz (headquarters) distributors
+    from apps.distributors.models import Distributor
+    distributors = Distributor.objects.filter(distributor_type='headquarters', is_active=True).order_by('name')
+    
     # Generate next code for display
     product_count = Product.objects.count()
     next_number = product_count + 1
@@ -111,6 +118,7 @@ def product_create(request):
         'categories': categories,
         'units': units,
         'packagings': packagings,
+        'distributors': distributors,
         'next_code': next_code
     }
     return render(request, 'products/product_form.html', context)
@@ -139,7 +147,27 @@ def product_edit(request, pk):
         product.sale_price = request.POST.get('sale_price')
         product.min_stock = request.POST.get('min_stock')
         product.status = request.POST.get('status')
+
         product.packaging_id = request.POST.get('packaging')
+        product.distributor_id = request.POST.get('distributor') or None
+        
+        # Validations
+        try:
+            cost = float(product.cost_price or 0)
+            sale = float(product.sale_price or 0)
+            min_stk = int(product.min_stock or 0)
+            
+            if cost >= sale:
+                messages.error(request, 'Preço de custo deve ser menor que preço de venda!')
+                return redirect('product_edit', pk=pk)
+            
+            if min_stk <= 0:
+                messages.error(request, 'Estoque mínimo deve ser maior que zero!')
+                return redirect('product_edit', pk=pk)
+        except ValueError:
+            messages.error(request, 'Valores inválidos nos campos numéricos!')
+            return redirect('product_edit', pk=pk)
+        
         product.save()
         
         messages.success(request, f'Produto {product.name} atualizado!')
@@ -150,11 +178,16 @@ def product_edit(request, pk):
     units = UnitOfMeasure.objects.all()
     packagings = Packaging.objects.filter(is_active=True)
     
+    # Get only Matriz (headquarters) distributors
+    from apps.distributors.models import Distributor
+    distributors = Distributor.objects.filter(distributor_type='headquarters', is_active=True).order_by('name')
+    
     context = {
         'product': product,
         'categories': categories,
         'units': units,
         'packagings': packagings,
+        'distributors': distributors,
         'is_edit': True
     }
     return render(request, 'products/product_form.html', context)
@@ -198,3 +231,19 @@ def packaging_edit(request, pk):
         'is_edit': True
     }
     return render(request, 'products/packaging_form.html', context)
+
+@login_required
+def product_delete(request, pk):
+    """Soft delete - inativa o produto ao invés de deletar"""
+    product = get_object_or_404(Product, pk=pk)
+    
+    if request.method == 'POST':
+        product.status = 'inactive'
+        product.save()
+        messages.success(request, f'Produto "{product.name}" inativado com sucesso!')
+        return redirect('product_list')
+    
+    context = {
+        'product': product
+    }
+    return render(request, 'products/product_confirm_delete.html', context)
