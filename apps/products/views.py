@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import Product, ProductStock
+from .models import Product, ProductStock, Packaging
 from apps.categories.models import Category
 from apps.establishments.models import Establishment
 from django.db.models import Q
@@ -57,7 +57,9 @@ def product_create(request):
         unit = request.POST.get('unit')
         cost_price = request.POST.get('cost_price')
         sale_price = request.POST.get('sale_price')
+        sale_price = request.POST.get('sale_price')
         min_stock = request.POST.get('min_stock')
+        packaging_id = request.POST.get('packaging')
         
         category = get_object_or_404(Category, id=category_id)
         
@@ -73,7 +75,8 @@ def product_create(request):
             unit=unit, # Will be ID if from dropdown, need to fix?
             cost_price=cost_price,
             sale_price=sale_price,
-            min_stock=min_stock
+            min_stock=min_stock,
+            packaging_id=packaging_id
         )
         
         # Handle Unit FK
@@ -97,6 +100,7 @@ def product_create(request):
     categories = Category.objects.all()
     from apps.core.models import UnitOfMeasure
     units = UnitOfMeasure.objects.all()
+    packagings = Packaging.objects.filter(is_active=True)
     
     # Generate next code for display
     product_count = Product.objects.count()
@@ -106,6 +110,7 @@ def product_create(request):
     context = {
         'categories': categories,
         'units': units,
+        'packagings': packagings,
         'next_code': next_code
     }
     return render(request, 'products/product_form.html', context)
@@ -134,6 +139,7 @@ def product_edit(request, pk):
         product.sale_price = request.POST.get('sale_price')
         product.min_stock = request.POST.get('min_stock')
         product.status = request.POST.get('status')
+        product.packaging_id = request.POST.get('packaging')
         product.save()
         
         messages.success(request, f'Produto {product.name} atualizado!')
@@ -142,11 +148,53 @@ def product_edit(request, pk):
     categories = Category.objects.all()
     from apps.core.models import UnitOfMeasure
     units = UnitOfMeasure.objects.all()
+    packagings = Packaging.objects.filter(is_active=True)
     
     context = {
         'product': product,
         'categories': categories,
         'units': units,
+        'packagings': packagings,
         'is_edit': True
     }
     return render(request, 'products/product_form.html', context)
+
+@login_required
+def packaging_list(request):
+    packagings = Packaging.objects.all().order_by('name')
+    context = {
+        'packagings': packagings
+    }
+    return render(request, 'products/packaging_list.html', context)
+
+@login_required
+def packaging_create(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        is_active = request.POST.get('is_active') == 'on'
+        
+        if name:
+            Packaging.objects.create(name=name, is_active=is_active)
+            messages.success(request, f'Embalagem "{name}" criada com sucesso!')
+            return redirect('packaging_list')
+        else:
+            messages.error(request, 'Nome é obrigatório.')
+            
+    return render(request, 'products/packaging_form.html')
+
+@login_required
+def packaging_edit(request, pk):
+    packaging = get_object_or_404(Packaging, pk=pk)
+    
+    if request.method == 'POST':
+        packaging.name = request.POST.get('name')
+        packaging.is_active = request.POST.get('is_active') == 'on'
+        packaging.save()
+        messages.success(request, f'Embalagem "{packaging.name}" atualizada!')
+        return redirect('packaging_list')
+        
+    context = {
+        'packaging': packaging,
+        'is_edit': True
+    }
+    return render(request, 'products/packaging_form.html', context)

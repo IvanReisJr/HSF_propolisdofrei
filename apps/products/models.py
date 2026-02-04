@@ -16,6 +16,27 @@ class ActiveManager(models.Manager):
         return super().get_queryset().filter(is_active=True)
 
 
+
+class Packaging(models.Model):
+    """
+    Modelo para tipos de embalagem (ex: Caixa, Frasco, Sachê).
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(_('Nome'), max_length=100, unique=True)
+    is_active = models.BooleanField(_('Ativo'), default=True)
+    created_at = models.DateTimeField(_('Criado em'), auto_now_add=True)
+    updated_at = models.DateTimeField(_('Atualizado em'), auto_now=True)
+
+    class Meta:
+        db_table = 'packagings'
+        verbose_name = _('Embalagem')
+        verbose_name_plural = _('Embalagens')
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
 class Product(models.Model):
     """
     Modelo para produtos.
@@ -32,6 +53,15 @@ class Product(models.Model):
         blank=True,
         verbose_name=_('Categoria'),
         related_name='products'
+    )
+    packaging = models.ForeignKey(
+        Packaging,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name=_('Embalagem'),
+        related_name='products',
+        help_text=_('Tipo de embalagem do produto')
     )
     unit = models.CharField(
         _('Unidade'),

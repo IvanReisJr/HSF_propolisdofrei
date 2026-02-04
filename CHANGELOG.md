@@ -7,6 +7,33 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ## [Não Lançado]
 
+### 2026-02-03 (Fase 01 - DB Reset & Escopo)
+
+#### Adicionado
+- Funcionalidade de **Embalagem** (Packaging):
+  - Criado modelo `Packaging` e tabela `packagings`.
+  - Adicionado campo `packaging` ao modelo `Product`.
+  - Interface Admin para gerenciar Tipos de Embalagem.
+  - Dropdown de Embalagem no formulário de Crição/Edição de Produto.
+  - Exibição da Embalagem na tela de Detalhes do Produto.
+- `CustomUserAdmin` atualizado com `add_fieldsets` para permitir cadastro de Usuário com Distribuidor via Admin.
+- **Interface de Gestão de Embalagens** no projeto (fora do Admin):
+  - Páginas para Listar, Criar e Editar embalagens (`/products/packagings/`).
+  - Link "Embalagens" adicionado ao menu "Cadastros" na sidebar.
+
+#### Alterado
+- **Reset de Banco de Dados**: Base zerada para início da "Fase 01".
+- **Escopo de Usuário**:
+  - `User` agora **exige** vínculo com `Distributor` (exceto superusuários).
+  - Removido/Depreciado uso direto de `establishment` no modelo de `User`.
+- **Dashboard**:
+  - Atualizado para exibir Nome do Distribuidor (`user.distributor.name`) em vez de Estabelecimento.
+  - Estatísticas de Estoque/Pedidos desativadas temporariamente (aguardando refatoração de Estoque Fase 02).
+
+#### Corrigido
+- Erro `AttributeError: 'User' object has no attribute 'establishment'` em views e templates.
+- Erro `UserForm has no field named 'distributor'` ao criar usuário via Admin.
+
 ### 2026-02-02
 
 #### Adicionado

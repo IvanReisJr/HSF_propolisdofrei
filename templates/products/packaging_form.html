@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{% if is_edit %}Editar Embalagem{% else %}Nova Embalagem{% endif %} - Própolis do Frei{% endblock %}
+{% block breadcrumbs %}
+<a href="{% url 'dashboard' %}" class="hover:text-primary transition-colors"
+    style="color: #a3a3a3; text-decoration: none;">Início</a> <span style="color: #a3a3a3;"> / </span> <a
+    href="{% url 'packaging_list' %}" class="hover:text-primary transition-colors"
+    style="color: #a3a3a3; text-decoration: none;">Embalagens</a> <span style="color: #a3a3a3;"> / </span> <span
+    style="font-weight: 600;">{% if is_edit %}Editar{% else %}Nova{% endif %}</span>
+{% endblock %}
+{% block content %}
+<div class="flex-col gap-6" style="max-width: 600px; margin: 0 auto;">
+    <div class="flex items-center gap-4">
+        <a href="{% url 'packaging_list' %}" class="btn btn-outline p-2">
+            <i data-lucide="arrow-left"></i>
+        </a>
+        <h1 style="font-size: 1.875rem; font-weight: 700;">{% if is_edit %}Editar Embalagem{% else %}Nova Embalagem{% endif %}</h1>
+    </div>
+    <form method="post" class="card flex-col gap-6">
+        {% csrf_token %}
+        <div class="flex-col gap-2">
+            <label class="label">Nome da Embalagem</label>
+            <input type="text" name="name" value="{{ packaging.name }}" class="input"
+                placeholder="Ex: Caixa Papelão, Frasco 30ml" required>
+        </div>
+        <div class="flex items-center gap-2">
+            <input type="checkbox" name="is_active" id="is_active" {% if not is_edit or packaging.is_active %}checked{% endif %}>
+            <label for="is_active" style="font-size: 0.875rem;">Ativo</label>
+        </div>
+        <div class="flex justify-end gap-3"
+            style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-top: 1rem;">
+            <a href="{% url 'packaging_list' %}" class="btn btn-outline">Cancelar</a>
+            <button type="submit" class="btn btn-primary">
+                <i data-lucide="save"></i> Salvar
+            </button>
+        </div>
+    </form>
+</div>
+<style>
+    .label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #404040;
+    }
+</style>
+{% endblock %}

@@ -79,6 +79,11 @@
                             style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem; border-radius: 2px; color: #A3A3A3; font-weight: 500; font-size: 0.8125rem; transition: all 0.2s; margin-top: 0.25rem;">
                             <i data-lucide="package" style="width: 16px; height: 16px;"></i> Produtos
                         </a>
+                        <a href="{% url 'packaging_list' %}"
+                            class="nav-sublink {% if 'packagings' in request.path %}active{% endif %}"
+                            style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem; border-radius: 2px; color: #A3A3A3; font-weight: 500; font-size: 0.8125rem; transition: all 0.2s; margin-top: 0.25rem;">
+                            <i data-lucide="box" style="width: 16px; height: 16px;"></i> Embalagens
+                        </a>
                         <a href="/categories/"
                             class="nav-sublink {% if 'categories' in request.path %}active{% endif %}"
                             style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem; border-radius: 2px; color: #A3A3A3; font-weight: 500; font-size: 0.8125rem; transition: all 0.2s; margin-top: 0.25rem;">

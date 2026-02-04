@@ -28,8 +28,10 @@
                     Olá, {{ user.first_name }}
                 </h1>
                 <p style="color: #78350F; max-width: 700px; font-weight: 500;">
-                    Gestão ativa da unidade <strong style="color: #B45309;">{{ user.establishment.name|default:"Geral" }}</strong>. Você tem <strong
-                        style="color: #B45309; background: rgba(255,255,255,0.5); padding: 0 4px; border-radius: 2px;">{{ stats.pending_orders|default:"0" }} distribuições</strong> pendentes hoje.
+                    Gestão ativa da unidade <strong style="color: #B45309;">{{ user.distributor.name|default:"Geral"
+                        }}</strong>. Você tem <strong
+                        style="color: #B45309; background: rgba(255,255,255,0.5); padding: 0 4px; border-radius: 2px;">{{
+                        stats.pending_orders|default:"0" }} distribuições</strong> pendentes hoje.
                 </p>
 
                 <div class="flex gap-3 mt-6">

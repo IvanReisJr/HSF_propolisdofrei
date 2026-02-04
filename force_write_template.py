@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+template_content = '''{% extends "base.html" %}
 
 {% block title %}{% if is_edit %}Editar Produto{% else %}Novo Produto{% endif %} - Própolis do Frei{% endblock %}
 
@@ -110,4 +110,18 @@
         color: #404040;
     }
 </style>
-{% endblock %}
+{% endblock %}'''
+
+# Force write
+with open(r'templates\products\product_form.html', 'w', encoding='utf-8') as f:
+    f.write(template_content)
+
+print("✅ Template reescrito com sucesso!")
+
+# Verify
+with open(r'templates\products\product_form.html', 'r', encoding='utf-8') as f:
+    content = f.read()
+    if 'category_id == cat.id' in content:
+        print("✅ VERIFICADO: Sintaxe correta (com espaços)")
+    else:
+        print("❌ ERRO: Sintaxe ainda incorreta")

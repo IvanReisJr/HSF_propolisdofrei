@@ -19,6 +19,7 @@ urlpatterns = [
     
     # Cadastros
     path('categories/', include('apps.categories.urls')),
+    path('packagings/', include('apps.products.urls_packagings')),
     path('core/', include('apps.core.urls')),
     
     # API (mantendo por compatibilidade se necessário futuramente)
