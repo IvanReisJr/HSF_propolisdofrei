@@ -33,3 +33,29 @@ O n8n atua como a camada de "orquestração" fora do Django.
 - O teste 'test_seguranca_multitenancy' deve cobrir as rotas que o n8n consome.
 
 ===========================================================
+
+5. BLINDAGEM E SEGURANÇA (IMPLEMENTAÇÃO FEV/2026)
+-----------------------------------------------------------
+Implementação do isolamento lógico entre Matriz e Filiais/Distribuidores.
+
+5.1. Isolamento de Dados (Multi-Tenancy Lógico)
+- O modelo `Packaging` (Embalagem) e `ProductStock` (Estoque) agora possuem vínculo direto com `Distributor`.
+- Regra de Ouro: Usuários comuns só enxergam dados onde `distributor__id == request.user.distributor.id`.
+- Apenas Superusuários (Admin) ou Staff (Matriz) podem ver dados globais, dependendo da View.
+
+5.2. Inativação Segura (Soft Delete)
+- Modelos `UnitOfMeasure`, `Distributor`, `Category`, `Packaging` e `Product` usam `is_active=True/False`.
+- NENHUM dado é deletado fisicamente do banco.
+- Views de Inativação:
+    * Unidades: Apenas Staff (Matriz).
+    * Distribuidores: Apenas Superusuários.
+    * Produtos/Embalagens: Restrito à unidade do usuário.
+
+5.3. Controle de Acesso (Login)
+- Signal `user_logged_in` implementado: Se `Distributor.is_active` for False, todos os usuários vinculados são desconectados imediatamente.
+
+5.4. Estoque e Torre de Controle
+- Entrada de Estoque (`registrar_entrada`): Usa `transaction.atomic` para separar movimentações por unidade e garantir integridade.
+- Dashboard (`dashboard_matriz_consolidado`): View exclusiva da Matriz que consolida saldos de todas as filiais para tomada de decisão.
+
+===========================================================

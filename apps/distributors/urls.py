@@ -5,4 +5,5 @@ urlpatterns = [
     path('', views.distributor_list, name='distributor_list'),
     path('new/', views.distributor_create, name='distributor_create'),
     path('<uuid:pk>/edit/', views.distributor_edit, name='distributor_edit'),
+    path('<uuid:pk>/inativar/', views.inativar_distribuidor, name='inativar_distribuidor'),
 ]

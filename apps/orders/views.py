@@ -38,14 +38,10 @@ def order_detail(request, pk):
 
 @login_required
 def order_create(request):
-    print("DEBUG: Entered order_create view")
     if request.method == 'POST':
-        print(f"DEBUG: POST data: {request.POST}")
         distributor_id = request.POST.get('distributor')
         establishment_id = request.POST.get('establishment')
         
-        # Simple JSON-like processing from form (simplified for monolith)
-        # In a real app we'd use Formsets or HTMX to add lines
         product_ids = request.POST.getlist('products[]')
         quantities = request.POST.getlist('quantities[]')
         unit_prices = request.POST.getlist('unit_prices[]')
@@ -56,13 +52,18 @@ def order_create(request):
 
         try:
             with transaction.atomic():
-                distributor = get_object_or_404(Distributor, id=distributor_id)
+                # Isolation: Use user's distributor if not superuser
+                if not request.user.is_super_user_role() and request.user.distributor:
+                     distributor = request.user.distributor
+                else:
+                     distributor = get_object_or_404(Distributor, id=distributor_id) if distributor_id else None
+
                 order = Order.objects.create(
                     establishment_id=establishment_id,
                     distributor=distributor,
-                    user=request.user,  # Required: user who created the order
+                    user=request.user,
                     status='pendente',
-                    total_amount=0 # Will update
+                    total_amount=0
                 )
                 
                 total = 0
@@ -70,9 +71,13 @@ def order_create(request):
                     if not qty or int(qty) <= 0: continue
                     
                     product = get_object_or_404(Product, id=pid)
+                    
+                    # SECURITY: Block inactive products
+                    if not product.is_active:
+                        raise Exception(f'Produto {product.name} está inativo e não pode ser incluído.')
+
                     qty = int(qty)
                     
-                    # Convert localized string "1.200,50" to float
                     try:
                         clean_price = u_price.replace('.', '').replace(',', '.')
                         price = float(clean_price)
@@ -97,19 +102,20 @@ def order_create(request):
                 return redirect('order_detail', pk=order.pk)
         except Exception as e:
             messages.error(request, f'Erro ao criar pedido: {str(e)}')
+            return redirect('order_create')
             
     distributors = Distributor.objects.all()
-    products = Product.objects.filter(status='active')
-    
-    # Enable selection of origin establishment
+    # SECURITY: Filter only active products
+    products = Product.objects.filter(is_active=True)
+    if not request.user.is_super_user_role() and request.user.distributor:
+         products = products.filter(distributor=request.user.distributor)
+
     if request.user.is_super_user_role():
         establishments = Establishment.objects.filter(is_active=True)
     else:
-        # Check if user has establishment assigned
         if hasattr(request.user, 'establishment') and request.user.establishment:
             establishments = Establishment.objects.filter(id=request.user.establishment.id)
         else:
-            # Fallback for headless users (should not happen in prod for normal roles)
             establishments = Establishment.objects.none()
         
     context = {
@@ -129,27 +135,61 @@ def order_confirm(request, pk):
     try:
         with transaction.atomic():
             for item in order.items.all():
-                # Check stock and deduct
-                stock = ProductStock.objects.get(product=item.product, establishment=order.establishment)
-                if stock.current_stock < item.quantity:
-                    raise Exception(f'Estoque insuficiente para {item.product.name}')
+                quantity_to_deduct = item.quantity
+                product = item.product
                 
-                stock.current_stock -= item.quantity
-                stock.save()
+                # Determine Distributor (Context of Stock Out)
+                # If Order has a distributor, use it. Else fallback to user's?
+                # Assuming Order.distributor is the SOURCE of the goods (Seller) or TARGET?
+                # Usually Order.distributor is the entity PLACING the order in this model?
+                # IF this is a Sales Order, we deduct from established source.
+                # FOR SIMULATION: We assume we are deducting from the Order's associated Distributor.
+                distributor = order.distributor 
+                if not distributor:
+                     raise Exception("Pedido sem Distribuidor vinculado. Não é possível baixar estoque.")
+
+                # FIFO Strategy: Operations on (Distributor + Product), ordered by Expiry
+                stocks = ProductStock.objects.filter(
+                    product=product, 
+                    distributor=distributor,
+                    current_stock__gt=0
+                ).order_by('expiration_date', 'created_at') # First expiring first
                 
-                # Record movement
-                StockMovement.objects.create(
-                    product=item.product,
-                    establishment=order.establishment,
-                    user=request.user,
-                    type='exit',
-                    quantity=item.quantity,
-                    reason=f'Pedido {order.order_number} confirmado'
-                )
+                total_available = sum(s.current_stock for s in stocks)
+                
+                if total_available < quantity_to_deduct:
+                    raise Exception(f'Estoque insuficiente para {product.name}. Disponível: {total_available}')
+                
+                for stock in stocks:
+                    if quantity_to_deduct <= 0:
+                        break
+                        
+                    deduct = min(stock.current_stock, quantity_to_deduct)
+                    previous_stock = stock.current_stock
+                    stock.current_stock -= deduct
+                    stock.save()
+                    
+                    quantity_to_deduct -= deduct
+                    
+                    # Record movement for this batch portion
+                    StockMovement.objects.create(
+                        product=product,
+                        distributor=distributor,
+                        user=request.user,
+                        movement_type='exit',
+                        quantity=deduct,
+                        reason=f'Pedido {order.order_number} confirmado',
+                        batch=stock.batch,
+                        expiration_date=stock.expiration_date,
+                        previous_stock=previous_stock,
+                        new_stock=stock.current_stock,
+                        reference_id=order.id,
+                        reference_type='order'
+                    )
             
             order.status = 'confirmado'
             order.save()
-            messages.success(request, f'Pedido {order.order_number} confirmado e estoque atualizado!')
+            messages.success(request, f'Pedido {order.order_number} confirmado e estoque baixado (MPVS)!')
     except Exception as e:
         messages.error(request, str(e))
         

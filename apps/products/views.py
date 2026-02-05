@@ -16,7 +16,31 @@ def product_list(request):
     if not request.user.is_super_user_role():
         products = products.filter(distributor=request.user.distributor)
         
-    return render(request, 'products/product_list_v2.html', {'products': products})
+    # Filters
+    query = request.GET.get('q', '')
+    selected_status = request.GET.get('status', 'active') # Default to active
+    selected_category = request.GET.get('category', '')
+
+    if query:
+        products = products.filter(name__icontains=query) | products.filter(code__icontains=query)
+    
+    if selected_category:
+        products = products.filter(category_id=selected_category)
+
+    if selected_status != 'all':
+        products = products.filter(status=selected_status)
+
+    categories = Category.objects.all().order_by('name')
+
+    context = {
+        'products': products,
+        'categories': categories,
+        'query': query,
+        'selected_status': selected_status,
+        'selected_category': selected_category
+    }
+        
+    return render(request, 'products/product_list_v2.html', context)
 
 @login_required
 def product_create(request):
@@ -257,35 +281,64 @@ def product_detail(request, pk):
 @login_required
 def packaging_list(request):
     packagings = Packaging.objects.filter(is_active=True)
+    if not request.user.is_super_user_role():
+        packagings = packagings.filter(distributor=request.user.distributor)
     return render(request, 'products/packaging_list.html', {'packagings': packagings})
 
 @login_required
 def packaging_create(request):
     if request.method == 'POST':
         name = request.POST.get('name')
+        is_active = 'is_active' in request.POST
         if name:
-            Packaging.objects.create(name=name)
+            distributor = None
+            if not request.user.is_super_user_role():
+                distributor = request.user.distributor
+                
+            Packaging.objects.create(name=name, is_active=is_active, distributor=distributor)
             messages.success(request, 'Embalagem criada com sucesso!')
             return redirect('packaging_list')
     return render(request, 'products/packaging_form.html')
 
 @login_required
 def packaging_edit(request, pk):
-    packaging = get_object_or_404(Packaging, pk=pk)
+    criteria = {'pk': pk}
+    if not request.user.is_super_user_role():
+        criteria['distributor'] = request.user.distributor
+        
+    packaging = get_object_or_404(Packaging, **criteria)
+    
     if request.method == 'POST':
         name = request.POST.get('name')
         if name:
             packaging.name = name
+            packaging.is_active = 'is_active' in request.POST
             packaging.save()
             messages.success(request, 'Embalagem atualizada!')
             return redirect('packaging_list')
-    return render(request, 'products/packaging_form.html', {'packaging': packaging})
+    return render(request, 'products/packaging_form.html', {'packaging': packaging, 'is_edit': True})
 
 @login_required
 def packaging_delete(request, pk):
-    packaging = get_object_or_404(Packaging, pk=pk)
+    criteria = {'pk': pk}
+    if not request.user.is_super_user_role():
+        criteria['distributor'] = request.user.distributor
+
+    packaging = get_object_or_404(Packaging, **criteria)
     if request.method == 'POST':
         packaging.delete()
         messages.success(request, 'Embalagem removida!')
         return redirect('packaging_list')
     return render(request, 'products/packaging_confirm_delete.html', {'packaging': packaging})
+
+@login_required
+def inativar_embalagem(request, pk):
+    criteria = {'pk': pk}
+    if not request.user.is_super_user_role():
+        criteria['distributor'] = request.user.distributor
+
+    packaging = get_object_or_404(Packaging, **criteria)
+    packaging.is_active = False
+    packaging.save()
+    messages.success(request, 'Embalagem inativada com sucesso!')
+    return redirect('packaging_list')

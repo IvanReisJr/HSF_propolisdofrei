@@ -8,13 +8,13 @@
 {% endblock %}
 
 {% block content %}
-<div class="flex-col gap-6 animate-enter">
+<div class="flex-col gap-6">
     <div class="flex justify-between items-center">
         <div>
             <h1 style="font-size: 1.875rem; font-weight: 800; color: #4B3621;">Categorias</h1>
             <p style="color: #78350F;">Gerencie as categorias de produtos.</p>
         </div>
-        <a href="{% url 'category_create' %}" class="btn btn-primary hover-lift hover-glow">
+        <a href="{% url 'category_create' %}" class="btn btn-primary">
             <i data-lucide="plus"></i> Nova Categoria
         </a>
     </div>
@@ -30,6 +30,9 @@
                         style="padding: 1rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
                         Descrição</th>
                     <th
+                        style="padding: 1rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Status</th>
+                    <th
                         style="padding: 1rem; text-align: right; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
                         Ações</th>
                 </tr>
@@ -39,16 +42,27 @@
                 <tr style="border-bottom: 1px solid #E5E5E5;" class="hover-bg-gray-50">
                     <td style="padding: 1rem; font-weight: 600; color: #4B3621;">{{ category.name }}</td>
                     <td style="padding: 1rem; color: #666;">{{ category.description|default:"-" }}</td>
+                    <td style="padding: 1rem;">
+                        <span
+                            style="padding: 0.25rem 0.5rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; 
+                        background: {% if category.is_active %}#dcfce7; color: #166534{% else %}#fee2e2; color: #991b1b{% endif %};">
+                            {% if category.is_active %}Ativo{% else %}Inativo{% endif %}
+                        </span>
+                    </td>
                     <td style="padding: 1rem; text-align: right;">
-                        <a href="{% url 'category_edit' category.pk %}" class="btn btn-sm btn-outline"
-                            style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
-                            <i data-lucide="edit-2" style="width: 14px;"></i>
+                        <a href="{% url 'category_edit' category.pk %}" class="btn btn-outline p-2" title="Editar">
+                            <i data-lucide="edit-2" style="width: 16px;"></i>
+                        </a>
+                        <a href="{% url 'inativar_categoria' category.pk %}" class="btn btn-outline p-2"
+                            title="Inativar" style="color: #ef4444; border-color: #fca5a5;"
+                            onclick="return confirm('Tem certeza que deseja inativar esta categoria?');">
+                            <i data-lucide="trash-2" style="width: 16px;"></i>
                         </a>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="3" style="padding: 3rem; text-align: center; color: #a3a3a3;">
+                    <td colspan="4" style="padding: 3rem; text-align: center; color: #a3a3a3;">
                         <i data-lucide="folder"
                             style="width: 32px; height: 32px; opacity: 0.3; margin-bottom: 0.5rem;"></i>
                         <p>Nenhuma categoria cadastrada.</p>

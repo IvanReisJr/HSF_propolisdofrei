@@ -7,6 +7,24 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ## [Não Lançado]
 
+### 2026-02-05 (Fase 02 - Blindagem & Estoque)
+
+#### Adicionado
+- **Segurança & Blindagem**:
+  - Implementado Isolamento Lógico (Multi-tenancy) por `Distributor` em Embalagens e Estoque.
+  - Signal `user_logged_in` para bloquear acesso de usuários vinculados a distribuidores inativos.
+- **Inativação (Soft Delete)**:
+  - Adicionado campo `is_active` e lógica de inativação para `UnitOfMeasure`, `Category` e `Distributor`.
+  - Views de inativação com verificação de permissão (`is_staff` para Unidades, `is_superuser` para Distribuidores).
+- **Estoque**:
+  - View `registrar_entrada` com transação atômica (`transaction.atomic`) e filtro por Distribuidor.
+  - Modelos `ProductStock` e `StockMovement` atualizados para usar `Distributor` em vez de Establishment.
+- **Torre de Controle**:
+  - View `dashboard_matriz_consolidado` com agregação de saldos por filial (Acesso restrito à Matriz).
+
+#### Alterado
+- **Documentação**: Atualizado `documentacao_projeto_hsf_V2.txt` com a Seção 5 (Blindagem e Segurança).
+
 ### 2026-02-03 (Fase 01 - DB Reset & Escopo)
 
 #### Adicionado

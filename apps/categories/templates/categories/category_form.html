@@ -3,7 +3,8 @@
 {% block title %} Nova Categoria - Própolis do Frei{% endblock %}
 
 {% block breadcrumbs %}
-<span style="color: #a3a3a3;">Cadastros / Categorias / </span><span style="font-weight: 600; color: var(--primary);">{% if category %}Editar{% else %}Nova{% endif %}</span>
+<span style="color: #a3a3a3;">Cadastros / Categorias / </span><span style="font-weight: 600; color: var(--primary);">{%
+    if category %}Editar{% else %}Nova{% endif %}</span>
 {% endblock %}
 
 {% block content %}
@@ -12,20 +13,28 @@
         <h1 style="font-size: 1.5rem; font-weight: 800; color: #4B3621; margin-bottom: 1.5rem;">
             {% if category %}Editar Categoria{% else %}Nova Categoria{% endif %}
         </h1>
-        
+
         <form method="post" class="flex-col gap-4">
             {% csrf_token %}
-            
+
             <div class="flex-col gap-2">
                 <label for="name" class="label">Nome da Categoria</label>
-                <input type="text" name="name" id="name" class="input" value="{{ category.name|default:'' }}" required placeholder="Ex: Mel, Própolis, Cosméticos...">
+                <input type="text" name="name" id="name" class="input" value="{{ category.name|default:'' }}" required
+                    placeholder="Ex: Mel, Própolis, Cosméticos...">
             </div>
-            
+
             <div class="flex-col gap-2">
                 <label for="description" class="label">Descrição (Opcional)</label>
-                <textarea name="description" id="description" class="input" rows="4" placeholder="Detalhes sobre esta categoria...">{{ category.description|default:'' }}</textarea>
+                <textarea name="description" id="description" class="input" rows="4"
+                    placeholder="Detalhes sobre esta categoria...">{{ category.description|default:'' }}</textarea>
             </div>
-            
+
+            <div class="flex items-center gap-2">
+                <input type="checkbox" name="is_active" id="is_active" {% if not category or category.is_active
+                    %}checked{% endif %}>
+                <label for="is_active" class="label">Ativo</label>
+            </div>
+
             <div class="flex gap-3 mt-4 justify-end">
                 <a href="{% url 'category_list' %}" class="btn btn-outline">Cancelar</a>
                 <button type="submit" class="btn btn-primary hover-lift hover-glow">Salvar Categoria</button>

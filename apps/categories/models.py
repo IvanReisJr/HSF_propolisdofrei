@@ -8,6 +8,7 @@ class Category(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(_('Nome'), max_length=100, unique=True)
     description = models.TextField(_('Descrição'), blank=True, null=True)
+    is_active = models.BooleanField(_('Ativo'), default=True)
     created_at = models.DateTimeField(_('Criado em'), auto_now_add=True)
     updated_at = models.DateTimeField(_('Atualizado em'), auto_now=True)
 

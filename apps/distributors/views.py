@@ -6,7 +6,7 @@ from apps.core.constants import BRAZIL_STATES
 
 @login_required
 def distributor_list(request):
-    distributors = Distributor.objects.all()
+    distributors = Distributor.objects.filter(is_active=True)
     return render(request, 'distributors/distributor_list.html', {'distributors': distributors})
 
 @login_required
@@ -42,7 +42,8 @@ def distributor_create(request):
                 city=city,
                 state=state,
                 notes=notes,
-                distributor_type=distributor_type
+                distributor_type=distributor_type,
+                is_active=True
             )
             messages.success(request, f'Distribuidor "{name}" criado com sucesso no estado {state}!')
             return redirect('distributor_list')
@@ -102,3 +103,18 @@ def distributor_edit(request, pk):
         'states': BRAZIL_STATES
     }
     return render(request, 'distributors/distributor_form.html', context)
+
+@login_required
+def inativar_distribuidor(request, pk):
+    if not request.user.is_super_user_role():
+        messages.error(request, 'Apenas administradores podem inativar distribuidores.')
+        return redirect('distributor_list')
+        
+    distributor = get_object_or_404(Distributor, pk=pk)
+    
+    # Optional: Check if trying to inactivate self (Headquarters often shouldn't update itself this way, but strictly following prompt)
+    
+    distributor.is_active = False
+    distributor.save()
+    messages.success(request, 'Distribuidor Inativado!')
+    return redirect('distributor_list')

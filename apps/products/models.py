@@ -24,6 +24,14 @@ class Packaging(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(_('Nome'), max_length=100, unique=True)
     is_active = models.BooleanField(_('Ativo'), default=True)
+    distributor = models.ForeignKey(
+        'distributors.Distributor',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        verbose_name=_('Distribuidor'),
+        related_name='packagings'
+    )
     created_at = models.DateTimeField(_('Criado em'), auto_now_add=True)
     updated_at = models.DateTimeField(_('Atualizado em'), auto_now=True)
 
@@ -172,9 +180,21 @@ class ProductStock(models.Model):
         'establishments.Establishment',
         on_delete=models.CASCADE,
         related_name='product_stocks',
-        verbose_name=_('Estabelecimento')
+        verbose_name=_('Estabelecimento'),
+        null=True, # Making nullable to ease transition
+        blank=True
+    )
+    distributor = models.ForeignKey(
+        'distributors.Distributor',
+        on_delete=models.CASCADE,
+        related_name='product_stocks',
+        verbose_name=_('Distribuidor'),
+        null=True,
+        blank=True
     )
     current_stock = models.IntegerField(_('Estoque Atual'), default=0)
+    batch = models.CharField(_('Lote'), max_length=50, default='S/L')
+    expiration_date = models.DateField(_('Data de Validade'), null=True, blank=True)
     updated_at = models.DateTimeField(_('Atualizado em'), auto_now=True)
 
     class Meta:
@@ -183,8 +203,8 @@ class ProductStock(models.Model):
         verbose_name_plural = _('Estoques de Produtos')
         constraints = [
             models.UniqueConstraint(
-                fields=['product', 'establishment'],
-                name='unique_product_establishment'
+                fields=['product', 'distributor', 'batch'],
+                name='unique_product_distributor_batch'
             )
         ]
 

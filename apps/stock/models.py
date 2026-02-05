@@ -19,11 +19,13 @@ class StockMovement(models.Model):
     Registra todas as entradas, saídas, ajustes e estornos por estabelecimento.
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    establishment = models.ForeignKey(
-        'establishments.Establishment',
+    distributor = models.ForeignKey(
+        'distributors.Distributor',
         on_delete=models.PROTECT,
         related_name='stock_movements',
-        verbose_name=_('Estabelecimento')
+        verbose_name=_('Distribuidor'),
+        null=True,
+        blank=True
     )
     product = models.ForeignKey(
         'products.Product',
@@ -39,6 +41,9 @@ class StockMovement(models.Model):
     quantity = models.IntegerField(_('Quantidade'))
     previous_stock = models.IntegerField(_('Estoque Anterior'))
     new_stock = models.IntegerField(_('Novo Estoque'))
+    new_stock = models.IntegerField(_('Novo Estoque'))
+    batch = models.CharField(_('Lote'), max_length=50, null=True, blank=True)
+    expiration_date = models.DateField(_('Data de Validade'), null=True, blank=True)
     reason = models.TextField(_('Motivo'))
     reference_id = models.UUIDField(
         _('ID de Referência'),

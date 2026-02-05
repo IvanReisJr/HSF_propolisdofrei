@@ -1,4 +1,7 @@
-{% extends "base.html" %}
+
+import os
+
+content = """{% extends "base.html" %}
 
 {% block title %}{% if is_edit %}Editar Produto{% else %}Novo Produto{% endif %} - Própolis do Frei{% endblock %}
 
@@ -144,3 +147,10 @@
     }
 </style>
 {% endblock %}
+"""
+
+file_path = os.path.join('templates', 'products', 'product_form.html')
+with open(file_path, 'w', encoding='utf-8') as f:
+    f.write(content)
+
+print(f"✔ Successfully overwrote {file_path}")

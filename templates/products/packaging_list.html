@@ -41,6 +41,11 @@
                         <a href="{% url 'packaging_edit' pkg.pk %}" class="btn btn-outline p-2" title="Editar">
                             <i data-lucide="edit-2" style="width: 16px;"></i>
                         </a>
+                        <a href="{% url 'inativar_embalagem' pkg.pk %}" class="btn btn-outline p-2" title="Inativar"
+                            onclick="return confirm('Tem certeza que deseja inativar esta embalagem?');"
+                            style="color: #ef4444; border-color: #fca5a5;">
+                            <i data-lucide="trash-2" style="width: 16px;"></i>
+                        </a>
                     </td>
                 </tr>
                 {% empty %}

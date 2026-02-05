@@ -8,6 +8,7 @@ class UnitOfMeasure(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(_('Nome'), max_length=50, unique=True, help_text=_('Ex: Quilograma, Unidade, Metro'))
     abbreviation = models.CharField(_('Sigla'), max_length=10, unique=True, help_text=_('Ex: kg, un, m'))
+    is_active = models.BooleanField(_('Ativo'), default=True)
     
     created_at = models.DateTimeField(_('Criado em'), auto_now_add=True)
     updated_at = models.DateTimeField(_('Atualizado em'), auto_now=True)
