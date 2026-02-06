@@ -25,16 +25,26 @@ class Order(models.Model):
         'establishments.Establishment',
         on_delete=models.PROTECT,
         related_name='orders',
-        verbose_name=_('Estabelecimento'),
-        help_text=_('Estabelecimento que está fazendo o pedido')
+        verbose_name=_('Estabelecimento (Legado)'),
+        help_text=_('Campo legado. Use target_distributor.'),
+        null=True,
+        blank=True
     )
     distributor = models.ForeignKey(
         'distributors.Distributor',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='orders',
-        verbose_name=_('Distribuidor')
+        related_name='sales_orders',
+        verbose_name=_('CD de Origem (Matriz)')
+    )
+    target_distributor = models.ForeignKey(
+        'distributors.Distributor',
+        on_delete=models.PROTECT,
+        related_name='purchase_orders',
+        verbose_name=_('Filial de Destino'),
+        null=True,
+        blank=True
     )
     user = models.ForeignKey(
         'authentication.User',

@@ -85,8 +85,8 @@ propolisdofrei/
 │   ├── products/         # Modelos de produtos e categorias
 │   ├── stock/            # Movimentações de estoque
 │   ├── orders/           # Pedidos de distribuição
-│   ├── distributors/     # Gestão de parceiros
-│   └── establishments/   # Filiais e unidades
+│   ├── distributors/     # Gestão de parceiros e unidades (Matriz/Filiais)
+│   └── establishments/   # [LEGADO] Antiga gestão de unidades
 ├── templates/            # Arquivos HTML (Django Templates)
 ├── static/               # CSS, Imagens, JS
 └── config/               # Configurações do projeto (settings.py)

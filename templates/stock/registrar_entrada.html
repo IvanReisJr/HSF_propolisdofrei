@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Entrada de Mercadoria - Própolis do Frei{% endblock %}
+
+{% block breadcrumbs %}
+<a href="{% url 'dashboard' %}" class="hover:text-primary transition-colors"
+    style="color: #a3a3a3; text-decoration: none;">Início</a> <span style="color: #a3a3a3;"> / </span> <a
+    href="{% url 'movement_list' %}" class="hover:text-primary transition-colors"
+    style="color: #a3a3a3; text-decoration: none;">Estoque</a> <span style="color: #a3a3a3;"> / </span> <span
+    style="font-weight: 600;">Entrada</span>
+{% endblock %}
+
+{% block content %}
+<div class="flex-col gap-6" style="max-width: 800px; margin: 0 auto;">
+    <div class="flex items-center gap-4">
+        <a href="{% url 'movement_list' %}" class="btn btn-outline p-2">
+            <i data-lucide="arrow-left"></i>
+        </a>
+        <h1 style="font-size: 1.875rem; font-weight: 700;">Registrar Entrada de Mercadoria</h1>
+    </div>
+
+    <form method="post" class="card flex-col gap-6">
+        {% csrf_token %}
+
+        <!-- Linha 1: Produto e Destino -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <div class="flex-col gap-2">
+                <label class="label">Produto</label>
+                <select name="product" class="input" required
+                    style="background-color: white !important; color: #333 !important;">
+                    <option value="">Selecione o Produto...</option>
+                    {% for product in products %}
+                    <option value="{{ product.id }}">{{ product.code }} - {{ product.name }} ({{ product.unit }})
+                    </option>
+                    {% empty %}
+                    <option value="" disabled>Nenhum produto ativo encontrado</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex-col gap-2">
+                <label class="label">Destino (Matriz)</label>
+                <select name="distributor" class="input" required
+                    style="background-color: white !important; color: #333 !important;">
+                    <option value="">Selecione a Matriz...</option>
+                    {% for dist in distributors %}
+                    <option value="{{ dist.id }}">{{ dist.name }}</option>
+                    {% empty %}
+                    <option value="" disabled>Nenhuma Matriz disponível</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <!-- Linha 2: Quantidade, Lote e Validade -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem;">
+            <div class="flex-col gap-2">
+                <label class="label">Quantidade</label>
+                <input type="number" name="quantity" class="input" min="1" required placeholder="Ex: 100">
+            </div>
+
+            <div class="flex-col gap-2">
+                <label class="label">Lote</label>
+                <input type="text" name="batch" class="input" required placeholder="Ex: LOTE2023001">
+            </div>
+
+            <div class="flex-col gap-2">
+                <label class="label">Data de Validade</label>
+                <input type="date" name="expiration_date" class="input" required>
+            </div>
+        </div>
+
+        <div class="flex justify-end items-center gap-3"
+            style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-top: 1rem;">
+            <a href="{% url 'movement_list' %}" class="btn btn-outline">Cancelar</a>
+            <button type="submit" class="btn btn-primary">
+                <i data-lucide="plus-circle"></i> Registrar Entrada
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    .label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #404040;
+    }
+</style>
+{% endblock %}

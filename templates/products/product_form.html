@@ -1,13 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}{% if is_edit %}Editar Produto{% else %}Novo Produto{% endif %} - Própolis do Frei{% endblock %}
+{% block title %}
+{% if is_edit %}Editar Produto{% else %}Novo Produto{% endif %} - Própolis do Frei
+{% endblock %}
 
 {% block breadcrumbs %}
 <a href="{% url 'dashboard' %}" class="hover:text-primary transition-colors"
-    style="color: #a3a3a3; text-decoration: none;">Início</a> <span style="color: #a3a3a3;"> / </span> <a
-    href="{% url 'product_list' %}" class="hover:text-primary transition-colors"
-    style="color: #a3a3a3; text-decoration: none;">Produtos</a> <span style="color: #a3a3a3;"> / </span> <span
-    style="font-weight: 600;">{% if is_edit %}Editar{% else %}Novo{% endif %}</span>
+    style="color: #a3a3a3; text-decoration: none;">Início</a>
+<span style="color: #a3a3a3;"> / </span>
+<a href="{% url 'product_list' %}" class="hover:text-primary transition-colors"
+    style="color: #a3a3a3; text-decoration: none;">Produtos</a>
+<span style="color: #a3a3a3;"> / </span>
+<span style="font-weight: 600;">{% if is_edit %}Editar{% else %}Novo{% endif %}</span>
 {% endblock %}
 
 {% block content %}
@@ -16,7 +20,9 @@
         <a href="{% url 'product_list' %}" class="btn btn-outline p-2">
             <i data-lucide="arrow-left"></i>
         </a>
-        <h1 style="font-size: 1.875rem; font-weight: 700;">{% if is_edit %}Editar Produto{% else %}Novo Produto{% endif %}</h1>
+        <h1 style="font-size: 1.875rem; font-weight: 700;">
+            {% if is_edit %}Editar Produto{% else %}Novo Produto{% endif %}
+        </h1>
     </div>
 
     <form method="post" class="card flex-col gap-6">
@@ -32,8 +38,7 @@
             <div class="flex-col gap-2">
                 <label class="label">Código Único</label>
                 {% if is_edit %}
-                <input type="text" name="code" value="{{ product.code }}" class="input" placeholder="Ex: PRO30"
-                    required>
+                <input type="text" name="code" value="{{ product.code }}" class="input" placeholder="Ex: PRO30" readonly style="background: #f3f4f6; color: #666; cursor: not-allowed;">
                 {% else %}
                 <input type="text" value="{{ next_code }}" class="input" disabled
                     style="background: #f3f4f6; color: #666;">
@@ -44,8 +49,10 @@
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
             <div class="flex-col gap-2">
-                <label class="label">Categoria <span style="font-size: 0.7em; color: #999;">({{ categories.count }} disponíveis)</span></label>
-                <select name="category" class="input" required style="background-color: white !important; color: #333 !important;">
+                <label class="label">Categoria <span style="font-size: 0.7em; color: #999;">({{ categories.count }}
+                        disponíveis)</span></label>
+                <select name="category" class="input" required
+                    style="background-color: white !important; color: #333 !important;">
                     <option value="">Selecione...</option>
                     {% for cat in categories %}
                     <option value="{{ cat.id }}" {% if product.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
@@ -133,6 +140,7 @@
                     <i data-lucide="save"></i> Salvar Produto
                 </button>
             </div>
+        </div>
     </form>
 </div>
 

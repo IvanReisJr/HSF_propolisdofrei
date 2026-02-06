@@ -1,0 +1,17 @@
+# REGRAS DO PROJETO HSF_PROPOLISDOFREI
+
+## Arquitetura de Negócio
+- Sistema Estanque (Standalone) para gestão de Própolis.
+- Unidades: MATRIZ (Centros de Distribuição: Humanitas e Sede Adm) e FILIAIS.
+- Catálogo Único: Produtos/Categorias são globais. Edição apenas por usuários de MATRIZ.
+
+## Padrões de Código
+- Django 5.0+.
+- Sintaxe de Template: SEMPRE usar espaços em comparadores: {% if a == b %}.
+- Integridade: IDs, PKs e Códigos de Produto são IMUTÁVEIS após o cadastro. Use 'readonly' e 'disabled' em UpdateViews.
+- Fluxo de Estoque: Todo pedido deve registrar o CD de origem para rastreabilidade de lote e nome no relatório.
+
+## Instruções de IA
+- Antes de sugerir mudanças em Views, verifique o impacto no isolamento de estoque por Distribuidor.
+- Ao criar templates, siga o padrão de design já estabelecido no projeto (CSS/Sidebar).
+- Sempre verifique se o 'transaction.atomic' está sendo usado em movimentações de estoque.

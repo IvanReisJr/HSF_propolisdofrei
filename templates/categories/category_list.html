@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Categorias - Própolis do Frei{% endblock %}
+
+{% block breadcrumbs %}
+<a href="{% url 'dashboard' %}" class="hover:text-primary transition-colors"
+    style="color: #a3a3a3; text-decoration: none;">Início</a> <span style="color: #a3a3a3;"> / </span> <span
+    style="font-weight: 600;">Categorias</span>
+{% endblock %}
+
+{% block content %}
+<div class="flex-col gap-6">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 style="font-size: 1.875rem; font-weight: 700;">Categorias</h1>
+            <p style="color: #666;">Gerencie as categorias de produtos.</p>
+        </div>
+        <div class="flex gap-2">
+            <a href="{% url 'category_create' %}" class="btn btn-primary">
+                <i data-lucide="plus"></i> Nova Categoria
+            </a>
+        </div>
+    </div>
+
+    <!-- Categories Table -->
+    <div class="card" style="max-height: 600px; overflow-y: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr
+                    style="border-bottom: 1px solid var(--border); text-align: left; position: sticky; top: 0; background: white; z-index: 10;">
+                    <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Nome</th>
+                    <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Descrição</th>
+                    <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Status</th>
+                    <th style="padding: 1rem; font-size: 0.875rem; color: #666; text-align: right;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                <tr style="border-bottom: 1px solid var(--sidebar-accent);">
+                    <td style="padding: 1rem; font-weight: 600;">{{ category.name }}</td>
+                    <td style="padding: 1rem; color: #666;">{{ category.description|default:"-" }}</td>
+                    <td style="padding: 1rem;">
+                        {% if category.is_active %}
+                        <span style="color: #22c55e; font-weight: 600;">Ativo</span>
+                        {% else %}
+                        <span style="color: #ef4444; font-weight: 600;">Inativo</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1rem; text-align: right;">
+                        <div class="flex justify-end gap-2">
+                            <a href="{% url 'category_edit' category.pk %}" class="btn btn-outline p-2" title="Editar">
+                                <i data-lucide="edit-2" style="width: 18px;"></i>
+                            </a>
+                            {% if category.is_active %}
+                            <a href="{% url 'inativar_categoria' category.pk %}" class="btn btn-outline p-2"
+                                title="Inativar" style="color: #ef4444; border-color: #ef4444;"
+                                onclick="return confirm('Tem certeza que deseja inativar esta categoria?');">
+                                <i data-lucide="trash-2" style="width: 18px;"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="padding: 3rem; text-align: center; color: #a3a3a3;">
+                        <i data-lucide="folder-open"
+                            style="width: 48px; height: 48px; display: block; margin: 0 auto 1rem; opacity: 0.3;"></i>
+                        Nenhuma categoria encontrada.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

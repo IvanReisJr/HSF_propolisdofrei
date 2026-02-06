@@ -96,23 +96,47 @@ from django.db import transaction
 def registrar_entrada(request):
     if request.method == 'POST':
         product_id = request.POST.get('product')
+        distributor_id = request.POST.get('distributor')
         quantity = int(request.POST.get('quantity'))
-        batch = request.POST.get('batch', 'S/L').strip() or 'S/L'
-        expiration_date = request.POST.get('expiration_date') or None # Default None if empty string
+        batch = request.POST.get('batch', '').strip()
+        expiration_date = request.POST.get('expiration_date') or None 
         
-        # Security: Get Product (and implicitly check isolation in GET, but double check here?)
-        product = get_object_or_404(Product, id=product_id)
+        # Validations
+        if not batch:
+            messages.error(request, 'O campo Lote é obrigatório.')
+            return redirect('registrar_entrada')
+            
+        if not expiration_date:
+            messages.error(request, 'O campo Data de Validade é obrigatório.')
+            return redirect('registrar_entrada')
+            
+        # Validation: Stock integrity (No expired products)
+        from django.utils import timezone
+        import datetime
         
-        # Logic: Unidade = request.user.distributor
-        distributor = request.user.distributor
-        
-        if not distributor and not request.user.is_superuser:
-            messages.error(request, 'Usuário sem unidade vinculada.')
+        # Convert string to date if needed (though Django forms usually handle this, raw POST needs parsing)
+        if isinstance(expiration_date, str):
+            exp_date_obj = datetime.datetime.strptime(expiration_date, '%Y-%m-%d').date()
+        else:
+            exp_date_obj = expiration_date
+            
+        if exp_date_obj < timezone.now().date():
+            messages.error(request, 'Não é permitida a entrada de produtos vencidos.')
             return redirect('registrar_entrada')
 
+        product = get_object_or_404(Product, id=product_id)
+        
+        # Validate Distributor (must be a Matriz)
+        from apps.distributors.models import Distributor
+        distributor = get_object_or_404(Distributor, id=distributor_id)
+        
+        # Check if it is a Matriz (using both new and old fields for safety)
+        if distributor.tipo_unidade != 'MATRIZ' and distributor.distributor_type != 'headquarters':
+             messages.error(request, 'O destino deve ser uma Matriz (CD).')
+             return redirect('registrar_entrada')
+
         # Logic: Get/Create Stock by Batch
-        # Note: defaults only used if created. If exists, we just update stock.
-        # Expiration date is usually fixed per batch.
+        # If exists, we sum quantity. If not, we create.
         stock, created = ProductStock.objects.get_or_create(
             product=product, 
             distributor=distributor, 
@@ -120,8 +144,10 @@ def registrar_entrada(request):
             defaults={'current_stock': 0, 'expiration_date': expiration_date}
         )
         
-        if created and expiration_date:
-            stock.expiration_date = expiration_date
+        # Check consistency of expiration date for existing batch
+        if not created and str(stock.expiration_date) != expiration_date:
+             messages.warning(request, f'Atenção: A data de validade deste lote foi atualizada de {stock.expiration_date} para {expiration_date}.')
+             stock.expiration_date = expiration_date
 
         stock.current_stock += quantity
         stock.save()
@@ -135,20 +161,29 @@ def registrar_entrada(request):
             quantity=quantity,
             previous_stock=stock.current_stock - quantity,
             new_stock=stock.current_stock,
-            reason="Entrada Manual",
+            reason="Entrada Manual de Mercadoria",
             batch=batch,
             expiration_date=expiration_date
         )
         
-        messages.success(request, f'Entrada de {quantity} {product.unit} (Lote: {batch}) registrada com sucesso!')
+        messages.success(request, f'Entrada de {quantity} {product.unit} (Lote: {batch}) registrada com sucesso para {distributor.name}!')
         return redirect('registrar_entrada')
 
-    # GET: Active Products only
-    products = Product.objects.filter(is_active=True)
-    if not request.user.is_super_user_role():
-        products = products.filter(distributor=request.user.distributor)
+    # GET
+    from apps.distributors.models import Distributor
+    from django.db.models import Q
+    
+    products = Product.objects.filter(is_active=True).order_by('name')
+    
+    # Filter only Matrizes (CDs)
+    matrizes = Distributor.objects.filter(
+        Q(tipo_unidade='MATRIZ') | Q(distributor_type='headquarters')
+    ).filter(is_active=True).order_by('name')
         
-    return render(request, 'stock/registrar_entrada.html', {'products': products})
+    return render(request, 'stock/registrar_entrada.html', {
+        'products': products,
+        'distributors': matrizes
+    })
 
 from django.db.models import Sum
 
@@ -158,14 +193,37 @@ def dashboard_matriz_consolidado(request):
         messages.error(request, 'Acesso restrito à Matriz.')
         return redirect('product_list')
 
-    # Aggregating stock by Distributor and Product
-    # Using 'distributor__name' and 'product__name' grouping
-    stock_data = ProductStock.objects.filter(product__is_active=True)\
-        .values('distributor__name', 'product__name', 'product__min_stock')\
-        .annotate(total=Sum('current_stock'))\
-        .order_by('distributor__name', 'product__name')
+    stocks = ProductStock.objects.filter(product__is_active=True).select_related('product', 'distributor')
+    
+    # Structure: {(product_id, batch): {'product': product, 'batch': batch, 'humanitas': 0, 'sede_adm': 0, 'total': 0}}
+    data = {}
+    
+    for stock in stocks:
+        key = (stock.product.id, stock.batch)
+        if key not in data:
+            data[key] = {
+                'product': stock.product,
+                'batch': stock.batch,
+                'humanitas': 0,
+                'sede_adm': 0,
+                'total': 0
+            }
         
-    return render(request, 'stock/dashboard_consolidado.html', {'stock_data': stock_data})
+        # Check distributor name
+        dist_name = stock.distributor.name.lower().strip() if stock.distributor else ""
+        
+        if 'humanitas' in dist_name:
+            data[key]['humanitas'] += stock.current_stock
+        elif 'sede adm' in dist_name:
+            data[key]['sede_adm'] += stock.current_stock
+            
+        # Total Global includes all distributors
+        data[key]['total'] += stock.current_stock
+        
+    # Sort by product name then batch
+    sorted_data = sorted(data.values(), key=lambda x: (x['product'].name, x['batch'] or ''))
+        
+    return render(request, 'stock/dashboard_consolidado.html', {'report_data': sorted_data})
 
 @login_required
 @transaction.atomic

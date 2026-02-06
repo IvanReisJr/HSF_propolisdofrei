@@ -22,23 +22,20 @@
             <h3 style="font-size: 1.125rem; font-weight: 600;">Informações do Pedido</h3>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
                 <div class="flex-col gap-2">
-                    <label class="label">Distribuidor / Cliente</label>
+                    <label class="label">Centro de Distribuição (Matriz)</label>
                     <select name="distributor" class="input" required>
-                        <option value="">Selecione o destino...</option>
+                        <option value="">Selecione o CD de Origem...</option>
                         {% for dist in distributors %}
                         <option value="{{ dist.id }}">{{ dist.name }} ({{ dist.city }})</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="flex-col gap-2">
-                    <label class="label">Unidade Origem (Saindo de)</label>
-                    <select name="establishment" class="input" required>
+                <!-- Legacy Establishment kept hidden or auto-filled if strict requirement, but we can omit form display if view handles it -->
+                <div class="flex-col gap-2" style="display: none;">
+                    <label class="label">Unidade Origem (Legado)</label>
+                    <select name="establishment" class="input">
                         {% for est in establishments %}
-                        {% if user.establishment.id == est.id %}
-                        <option value="{{ est.id }}" selected>{{ est.name }}</option>
-                        {% else %}
                         <option value="{{ est.id }}">{{ est.name }}</option>
-                        {% endif %}
                         {% endfor %}
                     </select>
                 </div>
@@ -252,7 +249,7 @@
         }
 
         // Initialize on Load
-        if (document.readyState === 'loading') {
+        if (document.readyState ==  = 'loading') {
             document.addEventListener('DOMContentLoaded', initOrderForm);
         } else {
             initOrderForm();

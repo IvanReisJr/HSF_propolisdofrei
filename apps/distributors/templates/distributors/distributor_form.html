@@ -71,7 +71,8 @@
             <div class="flex-col gap-2">
                 <label for="is_active" class="label"
                     style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; text-transform: none;">
-                    <input type="checkbox" name="is_active" id="is_active" {% if distributor.is_active or not distributor %}checked{% endif %} style="width: 1.25rem; height: 1.25rem; accent-color: var(--primary);">
+                    <input type="checkbox" name="is_active" id="is_active" {% if distributor.is_active or not distributor %}checked{% endif %}
+                        style="width: 1.25rem; height: 1.25rem; accent-color: var(--primary);">
                     Distribuidor Ativo
                 </label>
             </div>
@@ -93,8 +94,8 @@
                     <label for="state" class="label">Estado (UF)</label>
                     <select name="state" class="input" required>
                         <option value="">Selecione...</option>
-                        {% for code, name in states %}
-                        <option value="{{ code }}" {% if distributor.state == code %}selected{% endif %}>{{ name }} ({{ code }})</option>
+                        {% for code, name in BRAZIL_STATES %}
+                            <option value="{{ code }}" {% if distributor.state == code %}selected{% endif %}>{{ name }} ({{ code }})</option>
                         {% endfor %}
                     </select>
                 </div>

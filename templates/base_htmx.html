@@ -16,7 +16,7 @@
 <div style="margin-bottom: 1.5rem;">
     {% for message in messages %}
     <div class="alert alert-{{ message.tags }}"
-        style="padding: 1rem; border-radius: 2px; margin-bottom: 0.5rem; background: {% if message.tags == 'success' %}#D1FAE5{% elif message.tags == 'error' %}#FEE2E2{% else %}#FEF3C7{% endif %}; color: {% if message.tags == 'success' %}#065F46{% elif message.tags == 'error' %}#991B1B{% else %}#92400E{% endif %}; border-left: 3px solid {% if message.tags == 'success' %}#059669{% elif message.tags == 'error' %}#DC2626{% else %}#D4AF37{% endif %};">
+        style="padding: 1rem; border-radius: 2px; margin-bottom: 0.5rem; background: {% if message.tags   ==   'success' %}#D1FAE5{% elif message.tags   ==   'error' %}#FEE2E2{% else %}#FEF3C7{% endif %}; color: {% if message.tags   ==   'success' %}#065F46{% elif message.tags   ==   'error' %}#991B1B{% else %}#92400E{% endif %}; border-left: 3px solid {% if message.tags   ==   'success' %}#059669{% elif message.tags   ==   'error' %}#DC2626{% else %}#D4AF37{% endif %};">
         {{ message }}
     </div>
     {% endfor %}

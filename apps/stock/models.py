@@ -73,4 +73,5 @@ class StockMovement(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.get_movement_type_display()} - {self.product.name} - {self.establishment.name}"
+        distributor_name = self.distributor.name if self.distributor else "N/A"
+        return f"{self.get_movement_type_display()} - {self.product.name} - {distributor_name}"

@@ -21,9 +21,15 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - Modelos `ProductStock` e `StockMovement` atualizados para usar `Distributor` em vez de Establishment.
 - **Torre de Controle**:
   - View `dashboard_matriz_consolidado` com agregação de saldos por filial (Acesso restrito à Matriz).
+- **Hierarquia e Fluxo**:
+  - Modelo `Distributor`: Campo `tipo_unidade` (MATRIZ/FILIAL).
+  - Decorator `matriz_required`: Restrição de cadastros globais à Matriz.
+  - Sidebar Dinâmica: Menu 'Cadastros' oculto para Filiais.
+  - Pedido Multi-CD: Filial escolhe CD de Origem (Matriz) e é fixada como Destino.
 
 #### Alterado
 - **Documentação**: Atualizado `documentacao_projeto_hsf_V2.txt` com a Seção 5 (Blindagem e Segurança).
+- **Modelo de Pedido**: Suporte a Origem/Destino (Campos `target_distributor` e redefinição de `distributor`).
 
 ### 2026-02-03 (Fase 01 - DB Reset & Escopo)
 

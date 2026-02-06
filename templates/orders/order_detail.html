@@ -15,7 +15,9 @@
             </a>
             <div>
                 <h1 style="font-size: 1.875rem; font-weight: 700;">Pedido {{ order.order_number }}</h1>
-                <p style="color: #666;">Status: <span style="font-weight: 700; color: {% if order.status == 'pendente' %}#92400e{% elif order.status == 'confirmado' %}#166534{% else %}#b91c1c{% endif %};">{{ order.get_status_display }}</span></p>
+                <p style="color: #666;">Status: <span
+                        style="font-weight: 700; color: {% if order.status   ==   'pendente' %}#92400e{% elif order.status   ==   'confirmado' %}#166534{% else %}#b91c1c{% endif %};">{{
+                        order.get_status_display }}</span></p>
             </div>
         </div>
 
@@ -50,9 +52,12 @@
                 <thead>
                     <tr style="border-bottom: 1px solid var(--border); text-align: left;">
                         <th style="padding: 0.75rem 0; font-size: 0.875rem; color: #666;">Produto</th>
-                        <th style="padding: 0.75rem 0; font-size: 0.875rem; color: #666; text-align: center;">Quantidade</th>
-                        <th style="padding: 0.75rem 0; font-size: 0.875rem; color: #666; text-align: right;">Unitário</th>
-                        <th style="padding: 0.75rem 0; font-size: 0.875rem; color: #666; text-align: right;">Subtotal</th>
+                        <th style="padding: 0.75rem 0; font-size: 0.875rem; color: #666; text-align: center;">Quantidade
+                        </th>
+                        <th style="padding: 0.75rem 0; font-size: 0.875rem; color: #666; text-align: right;">Unitário
+                        </th>
+                        <th style="padding: 0.75rem 0; font-size: 0.875rem; color: #666; text-align: right;">Subtotal
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
@@ -64,7 +69,8 @@
                                 <span style="font-size: 0.75rem; color: #a3a3a3;">Código: {{ item.product.code }}</span>
                             </div>
                         </td>
-                        <td style="padding: 1rem 0; text-align: center;">{{ item.quantity }} {{ item.product.unit }}</td>
+                        <td style="padding: 1rem 0; text-align: center;">{{ item.quantity }} {{ item.product.unit }}
+                        </td>
                         <td style="padding: 1rem 0; text-align: right;">R$ {{ item.unit_price }}</td>
                         <td style="padding: 1rem 0; text-align: right; font-weight: 600;">R$ {{ item.total_price }}</td>
                     </tr>
@@ -73,11 +79,16 @@
                 <tfoot>
                     <tr>
                         <td colspan="3" style="padding: 1.5rem 0 0.5rem; text-align: right; color: #666;">Subtotal</td>
-                        <td style="padding: 1.5rem 0 0.5rem; text-align: right; font-weight: 600;">R$ {{ order.total_amount }}</td>
+                        <td style="padding: 1.5rem 0 0.5rem; text-align: right; font-weight: 600;">R$ {{
+                            order.total_amount }}</td>
                     </tr>
                     <tr>
-                        <td colspan="3" style="padding: 0.5rem 0; text-align: right; font-size: 1.125rem; font-weight: 700;">Total Geral</td>
-                        <td style="padding: 0.5rem 0; text-align: right; font-size: 1.125rem; font-weight: 700; color: var(--primary);">R$ {{ order.total_amount }}</td>
+                        <td colspan="3"
+                            style="padding: 0.5rem 0; text-align: right; font-size: 1.125rem; font-weight: 700;">Total
+                            Geral</td>
+                        <td
+                            style="padding: 0.5rem 0; text-align: right; font-size: 1.125rem; font-weight: 700; color: var(--primary);">
+                            R$ {{ order.total_amount }}</td>
                     </tr>
                 </tfoot>
             </table>
@@ -88,7 +99,8 @@
                 <h3 style="font-size: 1.125rem; font-weight: 600;">Destinatário</h3>
                 <div class="flex-col gap-2">
                     <p style="font-weight: 600;">{{ order.distributor.name }}</p>
-                    <p style="font-size: 0.875rem; color: #666;">{{ order.distributor.city }}, {{ order.distributor.state }}</p>
+                    <p style="font-size: 0.875rem; color: #666;">{{ order.distributor.city }}, {{
+                        order.distributor.state }}</p>
                     <p style="font-size: 0.875rem; color: #666;">{{ order.distributor.email }}</p>
                 </div>
             </div>

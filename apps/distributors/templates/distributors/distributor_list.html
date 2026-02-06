@@ -61,7 +61,8 @@
                     </td>
                     <td style="padding: 1rem; color: #666;">
                         {% if distributor.city or distributor.state %}
-                        {{ distributor.city|default:"" }}{% if distributor.city and distributor.state %} / {% endif %}{{ distributor.state|default:"" }}
+                        {{ distributor.city|default:"" }}{% if distributor.city and distributor.state %} / {% endif %}{{
+                        distributor.state|default:"" }}
                         {% else %}-{% endif %}
                     </td>
                     <td style="padding: 1rem;">

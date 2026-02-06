@@ -31,11 +31,12 @@ O sistema suporta Múltiplas unidades (Unidade, Caixa, Litro). Configure-as no m
 ---
 
 ## 4. Controle de Estoque
-O estoque é separado por **Estabelecimento** (Filial).
+O estoque é separado por **Unidade de Negócio** (Matriz/Filial).
 
 ### Registrar Movimentação
 Use esta função para dar entrada em notas fiscais, registrar perdas ou transferências manuais.
 1. Vá em **Estoque > Nova Movimentação**.
+2. O sistema selecionará automaticamente sua **Unidade** (Distribuidor vinculado).
 2. Selecione o **Produto**.
 3. Escolha o **Tipo**:
    - *Entrada Manual*: Nota fiscal ou compra.

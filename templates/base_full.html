@@ -59,10 +59,11 @@
                 <img src="{% static 'img/DoFrei.png' %}" alt="Própolis do Frei" class="sidebar-logo">
             </div>
             <nav class="sidebar-content" hx-target="#content-area" hx-push-url="true" hx-boost="true">
-                <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">
+                <a href="/" class="nav-link {% if request.path   ==   '/' %}active{% endif %}">
                     <i data-lucide="layout-dashboard"></i> Dashboard
                 </a>
 
+                {% if user.is_superuser or user.unidade.tipo_unidade == 'MATRIZ' %}
                 <!-- Cadastros Collapsible Section -->
                 <div class="nav-section" style="margin-top: 0.5rem;">
                     <button class="nav-section-toggle" onclick="toggleSection('cadastros')"
@@ -106,6 +107,7 @@
                         </a>
                     </div>
                 </div>
+                {% endif %}
 
                 <div
                     style="font-size: 0.75rem; font-weight: 700; color: #78350F; margin-top: 1rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; padding-left: 0.75rem;">

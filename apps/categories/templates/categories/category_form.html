@@ -1,10 +1,9 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 
 {% block title %} Nova Categoria - Própolis do Frei{% endblock %}
 
 {% block breadcrumbs %}
-<span style="color: #a3a3a3;">Cadastros / Categorias / </span><span style="font-weight: 600; color: var(--primary);">{%
-    if category %}Editar{% else %}Nova{% endif %}</span>
+<span style="color: #a3a3a3;">Cadastros / Categorias / </span><span style="font-weight: 600; color: var(--primary);">{% if category %}Editar{% else %}Nova{% endif %}</span>
 {% endblock %}
 
 {% block content %}
@@ -30,8 +29,7 @@
             </div>
 
             <div class="flex items-center gap-2">
-                <input type="checkbox" name="is_active" id="is_active" {% if not category or category.is_active
-                    %}checked{% endif %}>
+                <input type="checkbox" name="is_active" id="is_active" {% if not category or category.is_active %}checked{% endif %}>
                 <label for="is_active" class="label">Ativo</label>
             </div>
 

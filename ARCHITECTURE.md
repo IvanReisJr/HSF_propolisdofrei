@@ -25,11 +25,11 @@ O projeto está dividido em aplicações pequenas e focadas dentro da pasta `app
 | App | Responsabilidade | Models Principais |
 |-----|------------------|-------------------|
 | `authentication` | Gestão de usuários e login customizado | `User` (AbstractUser) |
-| `establishments` | Unidades físicas e filiais | `Establishment` |
+| `establishments` | [LEGADO] Unidades físicas (substituído por Distributors) | `Establishment` |
 | `products` | Catálogo, Categorias e Unidades de Medida | `Product`, `Category`, `ProductStock` |
 | `stock` | Movimentações (Entrada/Saída) e Auditoria | `StockMovement` |
 | `orders` | Pedidos de distribuição entre unidades | `Order`, `OrderItem` |
-| `distributors` | Parceiros externos que recebem produtos | `Distributor` |
+| `distributors` | Unidades de Negócio (Matriz, Filiais e Parceiros) | `Distributor` |
 | `core` | Utilitários globais, Dashboard e Middlewares | - |
 
 ---
@@ -69,11 +69,27 @@ Isso garante que o parser do Django nunca receba algo como `x==y` (sem espaços)
    - Deduz quantidade (`current_stock -= qty`).
    - Gera registro em `StockMovement` (tipo: 'exit').
    - Muda status do pedido para `Confirmado`.
-3. **Cancelamento**: Apenas pedidos `Pendentes` podem ser cancelados. Não afeta estoque.
+3. Cancelamento: Apenas pedidos `Pendentes` podem ser cancelados. Não afeta estoque.
 
 ---
 
-## 5. Deployment
+## 5. Fase 02: Blindagem e Multi-Tenancy (Fev/2026)
+
+Implementamos um isolamento lógico robusto para garantir que usuários de uma filial não acessem dados de outra.
+
+### 5.1. Isolamento de Dados
+- **Distributor como Entidade Central**: `ProductStock`, `StockMovement`, `Order` e `Packaging` agora são vinculados diretamente a `Distributor`.
+- **Regra de Ouro**: Filtros globais garantem que usuários comuns só vejam registros onde `distributor = request.user.distributor`.
+- **Establishment Depreciado**: O antigo modelo `Establishment` foi substituído funcionalmente por `Distributor` (que agora possui tipo MATRIZ/FILIAL).
+
+### 5.2. Segurança e Controle
+- **Inativação Segura (Soft Delete)**: `is_active` em vez de `delete()` físico para modelos críticos (`Product`, `Category`, `Distributor`).
+- **Torre de Controle (Matriz)**: Novo Dashboard Consolidado permite à Matriz visualizar estoques globais, enquanto Filiais veem apenas o local.
+- **Login Guard**: Signal `user_logged_in` impede acesso se o Distribuidor vinculado estiver inativo.
+
+---
+
+## 6. Deployment
 
 O sistema está preparado para deploy via Docker ou paaS (como Railway/Render).
 - **Static Files**: Configuradon via `whitenoise`.

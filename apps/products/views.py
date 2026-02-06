@@ -7,6 +7,7 @@ from apps.categories.models import Category
 from apps.distributors.models import Distributor
 from apps.core.models import UnitOfMeasure
 from apps.establishments.models import Establishment
+from apps.core.decorators import matriz_required
 
 @login_required
 def product_list(request):
@@ -43,6 +44,7 @@ def product_list(request):
     return render(request, 'products/product_list_v2.html', context)
 
 @login_required
+@matriz_required
 def product_create(request):
     if request.method == 'POST':
         try:
@@ -146,9 +148,10 @@ def product_create(request):
         'distributors': distributors,
         'next_code': next_code
     }
-    return render(request, 'products/product_form.html', context)
+    return render(request, 'products/product_form_v2.html', context)
 
 @login_required
+@matriz_required
 def product_edit(request, pk):
     # Isolation: Check access
     product = get_object_or_404(Product, pk=pk)
@@ -158,9 +161,9 @@ def product_edit(request, pk):
     if request.method == 'POST':
         product.name = request.POST.get('name')
         
-        # Only update code if explicitly changed (usually hidden/disabled or manual)
-        if request.POST.get('code'):
-             product.code = request.POST.get('code')
+        # Code is strictly read-only in edit mode - Ignore POST data
+        # if request.POST.get('code'):
+        #      product.code = request.POST.get('code')
              
         if request.POST.get('category'):
             product.category_id = request.POST.get('category')
@@ -243,9 +246,10 @@ def product_edit(request, pk):
         'distributors': distributors,
         'is_edit': True
     }
-    return render(request, 'products/product_form.html', context)
+    return render(request, 'products/product_form_v2.html', context)
 
 @login_required
+@matriz_required
 def product_delete(request, pk):
     product = get_object_or_404(Product, pk=pk)
     
@@ -286,6 +290,7 @@ def packaging_list(request):
     return render(request, 'products/packaging_list.html', {'packagings': packagings})
 
 @login_required
+@matriz_required
 def packaging_create(request):
     if request.method == 'POST':
         name = request.POST.get('name')
@@ -301,6 +306,7 @@ def packaging_create(request):
     return render(request, 'products/packaging_form.html')
 
 @login_required
+@matriz_required
 def packaging_edit(request, pk):
     criteria = {'pk': pk}
     if not request.user.is_super_user_role():
@@ -319,6 +325,7 @@ def packaging_edit(request, pk):
     return render(request, 'products/packaging_form.html', {'packaging': packaging, 'is_edit': True})
 
 @login_required
+@matriz_required
 def packaging_delete(request, pk):
     criteria = {'pk': pk}
     if not request.user.is_super_user_role():
@@ -332,6 +339,7 @@ def packaging_delete(request, pk):
     return render(request, 'products/packaging_confirm_delete.html', {'packaging': packaging})
 
 @login_required
+@matriz_required
 def inativar_embalagem(request, pk):
     criteria = {'pk': pk}
     if not request.user.is_super_user_role():

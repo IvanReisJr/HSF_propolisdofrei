@@ -97,6 +97,11 @@ class User(AbstractUser):
         """Verifica se é super usuário (sem distribuidor vinculado)"""
         return self.is_superuser or self.distributor is None
 
+    @property
+    def unidade(self):
+        """Alias para distributor para manter consistência com a nova nomenclatura"""
+        return self.distributor
+
 
 class UserRole(models.Model):
     """

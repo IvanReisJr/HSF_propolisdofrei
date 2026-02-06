@@ -51,7 +51,7 @@ class Product(models.Model):
     Cada produto tem estoque por estabelecimento (via ProductStock).
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    code = models.CharField(_('Código'), max_length=50, unique=True)
+    code = models.CharField(_('Código'), max_length=50, unique=True, editable=False)
     name = models.CharField(_('Nome'), max_length=200)
     description = models.TextField(_('Descrição'), blank=True, null=True)
     category = models.ForeignKey(
@@ -181,16 +181,15 @@ class ProductStock(models.Model):
         on_delete=models.CASCADE,
         related_name='product_stocks',
         verbose_name=_('Estabelecimento'),
-        null=True, # Making nullable to ease transition
-        blank=True
+        null=True,
+        blank=True,
+        help_text=_('[DEPRECATED] Campo depreciado na Fase 02. Use o campo Distribuidor.')
     )
     distributor = models.ForeignKey(
         'distributors.Distributor',
         on_delete=models.CASCADE,
         related_name='product_stocks',
-        verbose_name=_('Distribuidor'),
-        null=True,
-        blank=True
+        verbose_name=_('Distribuidor')
     )
     current_stock = models.IntegerField(_('Estoque Atual'), default=0)
     batch = models.CharField(_('Lote'), max_length=50, default='S/L')

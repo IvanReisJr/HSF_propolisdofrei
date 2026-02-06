@@ -135,7 +135,7 @@
                         <td style="padding: 1rem 0; border-bottom: 1px solid #f1f1f1;">
                             <span
                                 style="padding: 0.25rem 0.5rem; border-radius: 2px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
-                                background: {% if order.status == 'pendente' %}#FFFBEB; color: #B45309{% elif order.status == 'confirmado' %}#ECFDF5; color: #047857{% else %}#F3F4F6; color: #374151{% endif %};">
+                                background: {% if order.status   ==   'pendente' %}#FFFBEB; color: #B45309{% elif order.status   ==   'confirmado' %}#ECFDF5; color: #047857{% else %}#F3F4F6; color: #374151{% endif %};">
                                 {{ order.get_status_display }}
                             </span>
                         </td>
@@ -162,8 +162,8 @@
     <div class="flex flex-col gap-4">
         <!-- Top Row: Shared Space (50% each) -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
-            <!-- Action Card 1: Inventário Rápido -->
-            <a href="/stock/inventory/"
+            <!-- Action Card 1: Inventário -->
+            <a href="{% url 'dashboard_matriz_consolidado' %}"
                 class="card p-4 hover-lift flex flex-col items-center justify-center gap-2 hover-glow text-center"
                 style="border: 1px solid #E5E5E5;">
                 <div

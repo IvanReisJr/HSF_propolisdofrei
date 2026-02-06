@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if category %}Editar Categoria{% else %}Nova Categoria{% endif %} - Própolis do Frei
+{% endblock %}
+
+{% block breadcrumbs %}
+<a href="{% url 'dashboard' %}" class="hover:text-primary transition-colors"
+    style="color: #a3a3a3; text-decoration: none;">Início</a>
+<span style="color: #a3a3a3;"> / </span>
+<a href="{% url 'category_list' %}" class="hover:text-primary transition-colors"
+    style="color: #a3a3a3; text-decoration: none;">Categorias</a>
+<span style="color: #a3a3a3;"> / </span>
+<span style="font-weight: 600;">{% if category %}Editar{% else %}Nova{% endif %}</span>
+{% endblock %}
+
+{% block content %}
+<div class="flex-col gap-6" style="max-width: 600px; margin: 0 auto;">
+    <div class="flex items-center gap-4">
+        <a href="{% url 'category_list' %}" class="btn btn-outline p-2">
+            <i data-lucide="arrow-left"></i>
+        </a>
+        <h1 style="font-size: 1.875rem; font-weight: 700;">
+            {% if category %}Editar Categoria{% else %}Nova Categoria{% endif %}
+        </h1>
+    </div>
+
+    <form method="post" class="card flex-col gap-6">
+        {% csrf_token %}
+
+        <div class="flex-col gap-2">
+            <label class="label">Nome da Categoria</label>
+            <input type="text" name="name" value="{{ category.name|default:'' }}" class="input" required
+                placeholder="Ex: Suplementos">
+        </div>
+
+        <div class="flex-col gap-2">
+            <label class="label">Descrição</label>
+            <textarea name="description" class="input" rows="3"
+                placeholder="Descrição opcional...">{{ category.description|default:'' }}</textarea>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <input type="checkbox" name="is_active" id="is_active" {% if not category or category.is_active %}checked{% endif %}>
+            <label for="is_active" class="label" style="margin-bottom: 0;">Ativo</label>
+        </div>
+
+        <div class="flex justify-end items-center gap-3"
+            style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-top: 1rem;">
+            <a href="{% url 'category_list' %}" class="btn btn-outline">Cancelar</a>
+            <button type="submit" class="btn btn-primary">
+                <i data-lucide="save"></i> Salvar
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    .label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #404040;
+    }
+</style>
+{% endblock %}

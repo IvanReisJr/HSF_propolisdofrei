@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import UnitOfMeasure
+from .decorators import matriz_required
 
 @login_required
 def unit_list(request):
@@ -9,6 +10,7 @@ def unit_list(request):
     return render(request, 'core/unit_list.html', {'units': units})
 
 @login_required
+@matriz_required
 def unit_create(request):
     if request.method == 'POST':
         name = request.POST.get('name')

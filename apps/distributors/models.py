@@ -31,12 +31,25 @@ class Distributor(models.Model):
     state = models.CharField(_('Estado'), max_length=2, blank=True, null=True)
     notes = models.TextField(_('Observações'), blank=True, null=True)
     distributor_type = models.CharField(
-        _('Tipo'),
+        _('Tipo (Antigo)'),
         max_length=20,
         choices=DistributorType.choices,
         default=DistributorType.BRANCH,
-        help_text=_('Matriz tem permissões especiais no sistema')
+        help_text=_('Mantido para compatibilidade')
     )
+    
+    class UnidadeType(models.TextChoices):
+        MATRIZ = 'MATRIZ', _('Matriz')
+        FILIAL = 'FILIAL', _('Filial')
+
+    tipo_unidade = models.CharField(
+        _('Tipo de Unidade'),
+        max_length=10,
+        choices=UnidadeType.choices,
+        default=UnidadeType.FILIAL,
+        help_text=_('Define se é Matriz ou Filial')
+    )
+
     is_active = models.BooleanField(_('Ativo'), default=True)
     created_at = models.DateTimeField(_('Criado em'), auto_now_add=True)
     updated_at = models.DateTimeField(_('Atualizado em'), auto_now=True)

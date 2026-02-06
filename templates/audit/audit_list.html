@@ -58,7 +58,7 @@
                     <td style="padding: 1rem; font-weight: 600;">{{ log.user.username }}</td>
                     <td style="padding: 1rem;">
                         <span
-                            style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: {% if log.action  ==  'DELETE' %}#ef4444{% elif log.action  ==  'INSERT' %}#22c55e{% else %}#3b82f6{% endif %};">
+                            style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: {% if log.action == 'DELETE' %}#ef4444{% elif log.action == 'INSERT' %}#22c55e{% else %}#3b82f6{% endif %};">
                             {{ log.action }}
                         </span>
                     </td>

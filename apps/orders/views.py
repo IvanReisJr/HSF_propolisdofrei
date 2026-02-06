@@ -16,7 +16,11 @@ def order_list(request):
     if user.is_super_user_role():
         orders = Order.objects.all()
     else:
-        orders = Order.objects.filter(establishment=user.establishment)
+        # Filter by Target Distributor (The Filial)
+        if hasattr(request.user, 'distributor') and request.user.distributor:
+            orders = Order.objects.filter(target_distributor=request.user.distributor)
+        else:
+            orders = Order.objects.none()
     
     # Apply status filter
     if status_filter != 'all':
@@ -52,15 +56,25 @@ def order_create(request):
 
         try:
             with transaction.atomic():
-                # Isolation: Use user's distributor if not superuser
-                if not request.user.is_super_user_role() and request.user.distributor:
-                     distributor = request.user.distributor
-                else:
-                     distributor = get_object_or_404(Distributor, id=distributor_id) if distributor_id else None
+                # Isolation: Use user's distributor AS TARGET (Requester)
+                target_distributor = getattr(request.user, 'distributor', None)
+                
+                # Source Distributor (Supplying CD) comes from Form
+                if not distributor_id:
+                    raise Exception("Selecione o Centro de Distribuição (Matriz).")
+                
+                source_distributor = get_object_or_404(Distributor, id=distributor_id)
+                
+                # Validation: Cannot order from self if self is Matriz? Or just allow?
+                # Prompt says: "Garanta que uma Filial não consiga 'escolher' outra Filial como origem"
+                # Filter in context ensures only MATRIZ are shown, but backend check is good.
+                if getattr(source_distributor, 'tipo_unidade', '') != 'MATRIZ':
+                    raise Exception("A origem deve ser uma MATRIZ.")
 
                 order = Order.objects.create(
-                    establishment_id=establishment_id,
-                    distributor=distributor,
+                    establishment_id=establishment_id, # Nullable or Legacy
+                    distributor=source_distributor,    # Source
+                    target_distributor=target_distributor, # Target
                     user=request.user,
                     status='pendente',
                     total_amount=0
@@ -104,11 +118,15 @@ def order_create(request):
             messages.error(request, f'Erro ao criar pedido: {str(e)}')
             return redirect('order_create')
             
-    distributors = Distributor.objects.all()
+    # Distributors: Show ONLY MATRIZ options for source selection
+    distributors = Distributor.objects.filter(tipo_unidade='MATRIZ', is_active=True)
     # SECURITY: Filter only active products
     products = Product.objects.filter(is_active=True)
-    if not request.user.is_super_user_role() and request.user.distributor:
-         products = products.filter(distributor=request.user.distributor)
+    if request.user.distributor:
+         # Show all active products available (Global catalog or restricted?)
+         # Usually Filial can order any active product from Matriz.
+         # So we list all active products.
+         pass
 
     if request.user.is_super_user_role():
         establishments = Establishment.objects.filter(is_active=True)
