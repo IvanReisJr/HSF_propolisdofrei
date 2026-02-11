@@ -8,7 +8,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('distributors', '0002_distributor_distributor_type'),
-        ('establishments', '0001_initial'),
         ('products', '0008_packaging_distributor'),
     ]
 
@@ -17,10 +16,5 @@ class Migration(migrations.Migration):
             model_name='productstock',
             name='distributor',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='product_stocks', to='distributors.distributor', verbose_name='Distribuidor'),
-        ),
-        migrations.AlterField(
-            model_name='productstock',
-            name='establishment',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='product_stocks', to='establishments.establishment', verbose_name='Estabelecimento'),
         ),
     ]

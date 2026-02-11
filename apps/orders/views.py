@@ -4,7 +4,6 @@ from django.contrib import messages
 from .models import Order, OrderItem
 from apps.products.models import Product, ProductStock
 from apps.distributors.models import Distributor
-from apps.establishments.models import Establishment
 from apps.stock.models import StockMovement
 from django.db import transaction
 
@@ -44,7 +43,6 @@ def order_detail(request, pk):
 def order_create(request):
     if request.method == 'POST':
         distributor_id = request.POST.get('distributor')
-        establishment_id = request.POST.get('establishment')
         
         product_ids = request.POST.getlist('products[]')
         quantities = request.POST.getlist('quantities[]')
@@ -72,7 +70,6 @@ def order_create(request):
                     raise Exception("A origem deve ser uma MATRIZ.")
 
                 order = Order.objects.create(
-                    establishment_id=establishment_id, # Nullable or Legacy
                     distributor=source_distributor,    # Source
                     target_distributor=target_distributor, # Target
                     user=request.user,
@@ -128,26 +125,43 @@ def order_create(request):
          # So we list all active products.
          pass
 
-    if request.user.is_super_user_role():
-        establishments = Establishment.objects.filter(is_active=True)
-    else:
-        if hasattr(request.user, 'establishment') and request.user.establishment:
-            establishments = Establishment.objects.filter(id=request.user.establishment.id)
-        else:
-            establishments = Establishment.objects.none()
-        
     context = {
         'distributors': distributors,
         'products': products,
-        'establishments': establishments
+        'target_distributor': request.user.distributor
     }
     return render(request, 'orders/order_form.html', context)
 
 @login_required
+def order_authorize(request, pk):
+    """
+    Permite que a Matriz autorize um pedido pendente.
+    """
+    order = get_object_or_404(Order, pk=pk)
+    
+    # Verifica permissão: Apenas Matriz pode autorizar
+    user_distributor = getattr(request.user, 'distributor', None)
+    if not user_distributor or user_distributor.tipo_unidade != 'MATRIZ':
+        if not request.user.is_super_user_role():
+            messages.error(request, 'Apenas a Matriz pode autorizar pedidos.')
+            return redirect('order_detail', pk=pk)
+
+    if order.status != 'pendente':
+        messages.error(request, 'Apenas pedidos pendentes podem ser autorizados.')
+        return redirect('order_detail', pk=pk)
+    
+    order.status = 'autorizado'
+    order.save()
+    messages.success(request, f'Pedido {order.order_number} autorizado! Aguardando confirmação de recebimento pela Filial.')
+    return redirect('order_detail', pk=pk)
+
+@login_required
 def order_confirm(request, pk):
     order = get_object_or_404(Order, pk=pk)
-    if order.status != 'pendente':
-        messages.error(request, 'Este pedido não pode ser confirmado.')
+    
+    # Verifica se o pedido está autorizado
+    if order.status != 'autorizado':
+        messages.error(request, 'Este pedido precisa ser autorizado pela Matriz antes de ser confirmado.')
         return redirect('order_detail', pk=pk)
         
     try:
@@ -167,17 +181,30 @@ def order_confirm(request, pk):
                      raise Exception("Pedido sem Distribuidor vinculado. Não é possível baixar estoque.")
 
                 # FIFO Strategy: Operations on (Distributor + Product), ordered by Expiry
+                # SOURCE DISTRIBUTOR (Quem entrega) perde estoque
+                # TARGET DISTRIBUTOR (Quem pediu) recebe estoque?
+                # Regra de negócio: Se for TRANSFERÊNCIA, sai da Origem e entra no Destino.
+                # Se for VENDA FINAL, sai da Origem e some.
+                
+                # Neste contexto (Filial pedindo p/ Matriz), a Matriz perde estoque e a Filial ganha.
+                # 1. Baixa na Origem (Matriz)
+                source_distributor = order.distributor 
+                
+                if not source_distributor:
+                     raise Exception("Pedido sem Distribuidor de Origem vinculado.")
+
                 stocks = ProductStock.objects.filter(
                     product=product, 
-                    distributor=distributor,
+                    distributor=source_distributor,
                     current_stock__gt=0
-                ).order_by('expiration_date', 'created_at') # First expiring first
+                ).order_by('expiration_date', 'updated_at') # First expiring first
                 
                 total_available = sum(s.current_stock for s in stocks)
                 
                 if total_available < quantity_to_deduct:
-                    raise Exception(f'Estoque insuficiente para {product.name}. Disponível: {total_available}')
+                    raise Exception(f'Estoque insuficiente na Origem ({source_distributor.name}) para {product.name}. Disponível: {total_available}')
                 
+                deducted_total = 0
                 for stock in stocks:
                     if quantity_to_deduct <= 0:
                         break
@@ -188,15 +215,16 @@ def order_confirm(request, pk):
                     stock.save()
                     
                     quantity_to_deduct -= deduct
+                    deducted_total += deduct
                     
-                    # Record movement for this batch portion
+                    # Record movement (SAÍDA da Origem)
                     StockMovement.objects.create(
                         product=product,
-                        distributor=distributor,
+                        distributor=source_distributor,
                         user=request.user,
                         movement_type='exit',
                         quantity=deduct,
-                        reason=f'Pedido {order.order_number} confirmado',
+                        reason=f'Pedido {order.order_number} confirmado - Envio para {order.target_distributor.name}',
                         batch=stock.batch,
                         expiration_date=stock.expiration_date,
                         previous_stock=previous_stock,
@@ -204,10 +232,51 @@ def order_confirm(request, pk):
                         reference_id=order.id,
                         reference_type='order'
                     )
+                
+                # 2. Entrada no Destino (Filial)
+                target_distributor = order.target_distributor
+                if target_distributor:
+                    # Verifica se já existe estoque desse produto/lote no destino, ou cria novo
+                    # Simplificação: Cria um novo registro ou soma no existente (LIFO/FIFO mixing risk?)
+                    # Vamos somar no lote mais novo ou criar um genérico se não tiver info de lote da origem transferida
+                    # Idealmente, transferimos o lote exato.
+                    
+                    # Como iteramos sobre múltiplos lotes na origem, precisamos replicar essa estrutura no destino?
+                    # Para simplificar agora: Adicionamos o total deduzido em um registro "Consolidado" ou no primeiro lote encontrado?
+                    # Correto: Iterar e transferir lote a lote. Mas aqui simplificamos somando ao lote 'S/L' ou criando.
+                    
+                    # Melhor abordagem: Entrar como 'Transferência de Entrada'
+                    target_stock, created = ProductStock.objects.get_or_create(
+                        product=product,
+                        distributor=target_distributor,
+                        batch='TRANSF-' + str(order.order_number), # Identifica origem
+                        defaults={
+                            'current_stock': 0,
+                            'expiration_date': None # Deveria vir do lote origem
+                        }
+                    )
+                    
+                    previous_target_stock = target_stock.current_stock
+                    target_stock.current_stock += deducted_total
+                    target_stock.save()
+                    
+                    StockMovement.objects.create(
+                        product=product,
+                        distributor=target_distributor,
+                        user=request.user,
+                        movement_type='entry',
+                        quantity=deducted_total,
+                        reason=f'Recebimento Pedido {order.order_number} de {source_distributor.name}',
+                        batch=target_stock.batch,
+                        previous_stock=previous_target_stock,
+                        new_stock=target_stock.current_stock,
+                        reference_id=order.id,
+                        reference_type='order'
+                    )
             
             order.status = 'confirmado'
             order.save()
-            messages.success(request, f'Pedido {order.order_number} confirmado e estoque baixado (MPVS)!')
+            messages.success(request, f'Pedido {order.order_number} recebido e estoque atualizado com sucesso!')
     except Exception as e:
         messages.error(request, str(e))
         

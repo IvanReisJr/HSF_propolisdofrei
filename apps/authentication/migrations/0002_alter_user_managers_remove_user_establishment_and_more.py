@@ -17,10 +17,6 @@ class Migration(migrations.Migration):
             managers=[
             ],
         ),
-        migrations.RemoveField(
-            model_name='user',
-            name='establishment',
-        ),
         migrations.AddField(
             model_name='user',
             name='distributor',

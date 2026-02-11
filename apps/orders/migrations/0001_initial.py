@@ -13,7 +13,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('distributors', '0001_initial'),
-        ('establishments', '0001_initial'),
         ('products', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
@@ -30,7 +29,6 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Criado em')),
                 ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Atualizado em')),
                 ('distributor', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='orders', to='distributors.distributor', verbose_name='Distribuidor')),
-                ('establishment', models.ForeignKey(help_text='Estabelecimento que está fazendo o pedido', on_delete=django.db.models.deletion.PROTECT, related_name='orders', to='establishments.establishment', verbose_name='Estabelecimento')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='orders', to=settings.AUTH_USER_MODEL, verbose_name='Usuário')),
             ],
             options={

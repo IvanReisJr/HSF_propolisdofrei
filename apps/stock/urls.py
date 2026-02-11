@@ -7,5 +7,6 @@ urlpatterns = [
     path('api/stock-level/', views.get_stock_level, name='get_stock_level'),
     path('entrada/', views.registrar_entrada, name='registrar_entrada'),
     path('saida/', views.registrar_saida, name='registrar_saida'),
+    path('adjust/<uuid:product_id>/', views.ajustar_estoque, name='ajustar_estoque'),
     path('dashboard-matriz/', views.dashboard_matriz_consolidado, name='dashboard_matriz_consolidado'),
 ]

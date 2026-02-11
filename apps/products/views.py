@@ -6,7 +6,6 @@ from .models import Product, Packaging, ProductStock
 from apps.categories.models import Category
 from apps.distributors.models import Distributor
 from apps.core.models import UnitOfMeasure
-from apps.establishments.models import Establishment
 from apps.core.decorators import matriz_required
 
 @login_required
@@ -41,7 +40,7 @@ def product_list(request):
         'selected_category': selected_category
     }
         
-    return render(request, 'products/product_list_v2.html', context)
+    return render(request, 'products/product_list.html', context)
 
 @login_required
 @matriz_required
@@ -58,13 +57,22 @@ def product_create(request):
             status = request.POST.get('status', 'active')
             distributor_id = request.POST.get('distributor')
             
-            # Isolation: Force user's distributor if not superuser
+            # Isolation: Force user's distributor or get from form
+            distributor = None
             if not request.user.is_super_user_role():
                 distributor = request.user.distributor
-            else:
-                distributor = None
-                if distributor_id:
-                    distributor = get_object_or_404(Distributor, id=distributor_id)
+            elif distributor_id:
+                distributor = get_object_or_404(Distributor, id=distributor_id)
+
+            # If distributor is still None, it's an error (e.g., superuser didn't select one)
+            if not distributor:
+                # Default to user's distributor if possible, otherwise raise error
+                if hasattr(request.user, 'distributor') and request.user.distributor:
+                    distributor = request.user.distributor
+                else:
+                    messages.error(request, 'A unidade distribuidora é obrigatória.')
+                    # Redirect back to the form
+                    return redirect('product_create')
 
             # Fetch relational objects
             category = get_object_or_404(Category, id=category_id)
@@ -110,9 +118,9 @@ def product_create(request):
             )
             product.save()
 
-            # Initialize stock as 0 for all establishments
-            for est in Establishment.objects.all():
-                ProductStock.objects.get_or_create(product=product, establishment=est, defaults={'current_stock': 0})
+            # Initialize stock as 0 for all active distributors (Matriz and Filiais)
+            for dist in Distributor.objects.filter(is_active=True):
+                ProductStock.objects.get_or_create(product=product, distributor=dist, defaults={'current_stock': 0})
                 
             messages.success(request, f'Produto {name} criado com sucesso! Código: {code}')
             return redirect('product_list')
@@ -127,7 +135,7 @@ def product_create(request):
     units = UnitOfMeasure.objects.all()
     packagings = Packaging.objects.filter(is_active=True)
     try:
-        distributors = Distributor.objects.filter(distributor_type='headquarters', is_active=True).order_by('name')
+        distributors = Distributor.objects.filter(tipo_unidade='MATRIZ', is_active=True).order_by('name')
     except Exception:
         distributors = Distributor.objects.filter(is_active=True).order_by('name')
     
@@ -148,7 +156,7 @@ def product_create(request):
         'distributors': distributors,
         'next_code': next_code
     }
-    return render(request, 'products/product_form_v2.html', context)
+    return render(request, 'products/product_form.html', context)
 
 @login_required
 @matriz_required
@@ -234,7 +242,7 @@ def product_edit(request, pk):
     units = UnitOfMeasure.objects.all()
     packagings = Packaging.objects.filter(is_active=True)
     try:
-        distributors = Distributor.objects.filter(distributor_type='headquarters', is_active=True).order_by('name')
+        distributors = Distributor.objects.filter(tipo_unidade='MATRIZ', is_active=True).order_by('name')
     except Exception:
         distributors = Distributor.objects.filter(is_active=True).order_by('name')
     
@@ -246,7 +254,7 @@ def product_edit(request, pk):
         'distributors': distributors,
         'is_edit': True
     }
-    return render(request, 'products/product_form_v2.html', context)
+    return render(request, 'products/product_form.html', context)
 
 @login_required
 @matriz_required
@@ -273,7 +281,18 @@ def product_detail(request, pk):
         return redirect('product_list')
     # Fetch related checks?
     stock_movements = product.stock_movements.all().order_by('-created_at')[:10]
-    stocks = product.stocks.all()
+    
+    # Filter stocks based on simulator/user context
+    stocks = product.stocks.filter(current_stock__gt=0)
+    
+    # Check for simulation or user distributor
+    current_distributor_id = request.session.get('simulated_distributor_id')
+    
+    if current_distributor_id:
+        stocks = stocks.filter(distributor_id=current_distributor_id)
+    elif not request.user.is_super_user_role() and request.user.distributor:
+        stocks = stocks.filter(distributor=request.user.distributor)
+        
     context = {
         'product': product,
         'stock_movements': stock_movements,

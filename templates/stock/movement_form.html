@@ -22,7 +22,7 @@
             <div class="flex-col gap-2">
                 <label class="label">Produto</label>
                 <select name="product" class="input" required hx-get="{% url 'get_stock_level' %}"
-                    hx-target="#stock-display" hx-include="[name='establishment']">
+                    hx-target="#stock-display" hx-include="[name='distributor']">
                     <option value="">Selecione o produto...</option>
                     {% for prod in products %}
                     <option value="{{ prod.id }}">{{ prod.name }} - Unidade: {{ prod.unit }}</option>
@@ -45,10 +45,10 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
             <div class="flex-col gap-2">
                 <label class="label">Unidade / Local</label>
-                <select name="establishment" class="input" required hx-get="{% url 'get_stock_level' %}"
+                <select name="distributor" class="input" required hx-get="{% url 'get_stock_level' %}"
                     hx-target="#stock-display" hx-include="[name='product']">
-                    {% for est in establishments %}
-                    <option value="{{ est.id }}">{{ est.name }}</option>
+                    {% for dist in distributors %}
+                    <option value="{{ dist.id }}">{{ dist.name }}</option>
                     {% endfor %}
                 </select>
             </div>

@@ -6,17 +6,9 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('establishments', '0001_initial'),
         ('products', '0006_product_distributor'),
     ]
 
     operations = [
-        migrations.AlterUniqueTogether(
-            name='productstock',
-            unique_together=set(),
-        ),
-        migrations.AddConstraint(
-            model_name='productstock',
-            constraint=models.UniqueConstraint(fields=('product', 'establishment'), name='unique_product_establishment'),
-        ),
+        # Original operations removed as part of Establishment cleanup
     ]

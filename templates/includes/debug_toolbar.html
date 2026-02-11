@@ -1,0 +1,40 @@
+{% if user.is_superuser %}
+<div style="background-color: #2d3748; color: white; padding: 0.5rem 1rem; font-size: 0.875rem; border-bottom: 2px solid #ed8936; display: flex; justify-content: space-between; align-items: center; z-index: 10000; position: relative;">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <span style="font-weight: bold; color: #ed8936;">🛠️ FERRAMENTA DE TESTE</span>
+        <span>Simulador de Acesso</span>
+    </div>
+    
+    <form action="{% url 'switch_distributor' %}" method="post" style="display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+        {% csrf_token %}
+        <label for="distributor_select" style="color: #a0aec0;">Visualizar como:</label>
+        <select name="distributor_id" id="distributor_select" onchange="this.form.submit()" 
+                style="background: #4a5568; border: 1px solid #718096; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; outline: none;">
+            <option value="">-- Visão Global (Admin) --</option>
+            
+            {% if simulator_matriz %}
+            <optgroup label="🏢 Visão Matriz (Consolidado)">
+                {% for dist in simulator_matriz %}
+                    <option value="{{ dist.id }}" {% if current_simulated_id == dist.id|stringformat:"s" %}selected{% endif %}>
+                        {{ dist.name }}
+                    </option>
+                {% endfor %}
+            </optgroup>
+            {% endif %}
+
+            {% if simulator_filiais %}
+            <optgroup label="🏪 Visão Filiais (Individual)">
+                {% for dist in simulator_filiais %}
+                    <option value="{{ dist.id }}" {% if current_simulated_id == dist.id|stringformat:"s" %}selected{% endif %}>
+                        {{ dist.name }}
+                    </option>
+                {% endfor %}
+            </optgroup>
+            {% endif %}
+        </select>
+        {% if is_simulating %}
+            <span style="background: #e53e3e; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; margin-left: 0.5rem;">SIMULAÇÃO ATIVA</span>
+        {% endif %}
+    </form>
+</div>
+{% endif %}

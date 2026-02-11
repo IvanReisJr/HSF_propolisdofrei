@@ -1,7 +1,7 @@
 ===========================================================
 PROJETO: HSF_propolisdofrei - DOCUMENTAÇÃO COMPLETA
 ===========================================================
-Data de Atualização: 04/02/2026
+Data de Atualização: 11/02/2026
 
 1. INTEGRAÇÃO COM N8N (Workflow de Dados)
 -----------------------------------------------------------
@@ -39,7 +39,7 @@ O n8n atua como a camada de "orquestração" fora do Django.
 Implementação do isolamento lógico entre Matriz e Filiais/Distribuidores.
 
 5.1. Isolamento de Dados (Multi-Tenancy Lógico)
-- O modelo `Packaging` (Embalagem) e `ProductStock` (Estoque) agora possuem vínculo direto com `Distributor`.
+- O modelo `Packaging`, `ProductStock`, `StockMovement` e `Order` possuem vínculo direto com `Distributor`.
 - Regra de Ouro: Usuários comuns só enxergam dados onde `distributor__id == request.user.distributor.id`.
 - Apenas Superusuários (Admin) ou Staff (Matriz) podem ver dados globais, dependendo da View.
 
@@ -57,5 +57,25 @@ Implementação do isolamento lógico entre Matriz e Filiais/Distribuidores.
 5.4. Estoque e Torre de Controle
 - Entrada de Estoque (`registrar_entrada`): Usa `transaction.atomic` para separar movimentações por unidade e garantir integridade.
 - Dashboard (`dashboard_matriz_consolidado`): View exclusiva da Matriz que consolida saldos de todas as filiais para tomada de decisão.
+
+6. LIMPEZA DE LEGADO (FEV/2026)
+-----------------------------------------------------------
+- O modelo `Establishment` foi removido definitivamente do sistema.
+- Todas as referências (ForeignKeys, Imports, Serializers) foram migradas para `Distributor`.
+- O app `establishments` foi deletado.
+
+7. FLUXO DE PEDIDOS E SEGURANÇA (FEV/2026)
+-----------------------------------------------------------
+Implementação do fluxo seguro de distribuição entre Matriz e Filiais.
+
+7.1. Ciclo de Vida do Pedido
+- Status `PENDENTE`: Filial cria o pedido. Ação bloqueada para Filial.
+- Status `AUTORIZADO`: Matriz revisa e autoriza o envio. (Ação exclusiva da Matriz).
+- Status `CONFIRMADO`: Filial confirma recebimento físico. (Baixa automática de estoque).
+
+7.2. Regras de Negócio e Estoque
+- Transferência Automática: Ao confirmar, o sistema retira saldo da Origem (FIFO) e adiciona ao Destino.
+- Restrição de UI: Botões de ação são exibidos condicionalmente baseados no perfil do usuário (Matriz vs Filial).
+- Validação Backend: Views protegidas impedem bypass de fluxo via URL direta.
 
 ===========================================================

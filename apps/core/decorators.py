@@ -33,7 +33,8 @@ def matriz_required(view_func):
         # Check tipo_unidade
         # We access the property. Note: The field name in model is 'tipo_unidade'
         if getattr(unidade, 'tipo_unidade', '') != 'MATRIZ':
-             raise PermissionDenied("Apenas a Matriz pode realizar esta operação.")
+             messages.error(request, 'Acesso Negado: Apenas a Matriz pode acessar esta área.')
+             return redirect('dashboard')
 
         return view_func(request, *args, **kwargs)
 

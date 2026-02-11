@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load l10n %}
 
 {% block title %}Novo Pedido - Própolis do Frei{% endblock %}
 
@@ -22,7 +23,7 @@
             <h3 style="font-size: 1.125rem; font-weight: 600;">Informações do Pedido</h3>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
                 <div class="flex-col gap-2">
-                    <label class="label">Centro de Distribuição (Matriz)</label>
+                    <label class="label">Origem (Centro de Distribuição)</label>
                     <select name="distributor" class="input" required>
                         <option value="">Selecione o CD de Origem...</option>
                         {% for dist in distributors %}
@@ -30,14 +31,10 @@
                         {% endfor %}
                     </select>
                 </div>
-                <!-- Legacy Establishment kept hidden or auto-filled if strict requirement, but we can omit form display if view handles it -->
-                <div class="flex-col gap-2" style="display: none;">
-                    <label class="label">Unidade Origem (Legado)</label>
-                    <select name="establishment" class="input">
-                        {% for est in establishments %}
-                        <option value="{{ est.id }}">{{ est.name }}</option>
-                        {% endfor %}
-                    </select>
+                <div class="flex-col gap-2">
+                    <label class="label">Destino (Sua Unidade)</label>
+                    <input type="text" class="input" value="{{ target_distributor.name|default:'Sem Unidade Vinculada' }}" readonly style="background-color: #f3f4f6; cursor: not-allowed;">
+                    <small style="color: #666; font-size: 0.75rem;">O pedido será enviado para esta unidade.</small>
                 </div>
             </div>
         </div>
@@ -66,8 +63,7 @@
                             <select name="products[]" class="input product-select" required>
                                 <option value="">Escolha um produto...</option>
                                 {% for prod in products %}
-                                <option value="{{ prod.id }}" data-price="{{ prod.sale_price }}">{{ prod.name }} (Ref:
-                                    {{ prod.sale_price }})</option>
+                                <option value="{{ prod.id }}" data-price="{{ prod.sale_price|default:prod.cost_price|default:0|stringformat:'.2f' }}">{{ prod.name }} (Ref: {{ prod.sale_price|default:'--' }})</option>
                                 {% endfor %}
                             </select>
                         </td>
@@ -75,7 +71,7 @@
                             <input type="number" name="quantities[]" class="input qty-input" min="1" value="1" required>
                         </td>
                         <td style="padding: 1rem 0;">
-                            <input type="text" name="unit_prices[]" class="input price-input" value="0,00" required>
+                            <input type="text" name="unit_prices[]" class="input price-input" value="0,00" readonly required tabindex="-1" style="background-color: #f3f4f6; cursor: not-allowed;">
                         </td>
                         <td style="padding: 1rem 0; text-align: right;">
                             <button type="button" class="btn btn-outline remove-item"
@@ -112,8 +108,7 @@
             <select name="products[]" class="input product-select" required>
                 <option value="">Escolha um produto...</option>
                 {% for prod in products %}
-                <option value="{{ prod.id }}" data-price="{{ prod.sale_price }}">{{ prod.name }} (Ref: {{
-                    prod.sale_price }})</option>
+                <option value="{{ prod.id }}" data-price="{{ prod.sale_price|default:prod.cost_price|default:0|stringformat:'.2f' }}">{{ prod.name }} (Ref: {{ prod.sale_price|default:'--' }})</option>
                 {% endfor %}
             </select>
         </td>
@@ -121,7 +116,7 @@
             <input type="number" name="quantities[]" class="input qty-input" min="1" value="1" required>
         </td>
         <td style="padding: 1rem 0;">
-            <input type="text" name="unit_prices[]" class="input price-input" value="0,00" required>
+            <input type="text" name="unit_prices[]" class="input price-input" value="0,00" readonly required tabindex="-1" style="background-color: #f3f4f6; cursor: not-allowed;">
         </td>
         <td style="padding: 1rem 0; text-align: right;">
             <button type="button" class="btn btn-outline remove-item" style="color: #ef4444; border-color: #fee2e2;">
@@ -191,10 +186,25 @@
                 const select = row.querySelector('.product-select');
                 const priceInput = row.querySelector('.price-input');
                 const option = select.selectedOptions[0];
+                
+                // Debug logs requested by user
+                console.log('DEBUG: Product changed');
+                if (option) {
+                    console.log('DEBUG: Option selected:', option.text);
+                    console.log('DEBUG: data-price attribute:', option.dataset.price);
+                }
+
                 if (option && option.dataset.price) {
-                    const catalogPrice = parseFloat(option.dataset.price.replace(',', '.'));
-                    priceInput.value = formatLocaleNumber(catalogPrice);
-                    updateTotal();
+                    // Force dot separator for parsing
+                    const rawPrice = option.dataset.price.toString().replace(',', '.');
+                    const catalogPrice = parseFloat(rawPrice);
+                    
+                    console.log('DEBUG: Parsed price:', catalogPrice);
+
+                    if (!isNaN(catalogPrice)) {
+                        priceInput.value = formatLocaleNumber(catalogPrice);
+                        updateTotal();
+                    }
                 }
             }
 
@@ -249,9 +259,10 @@
         }
 
         // Initialize on Load
-        if (document.readyState ==  = 'loading') {
+        if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initOrderForm);
         } else {
+
             initOrderForm();
         }
 

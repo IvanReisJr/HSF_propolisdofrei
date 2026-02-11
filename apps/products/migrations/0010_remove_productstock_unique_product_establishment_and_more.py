@@ -7,15 +7,10 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('distributors', '0002_distributor_distributor_type'),
-        ('establishments', '0001_initial'),
         ('products', '0009_productstock_distributor_and_more'),
     ]
 
     operations = [
-        migrations.RemoveConstraint(
-            model_name='productstock',
-            name='unique_product_establishment',
-        ),
         migrations.AddField(
             model_name='productstock',
             name='batch',

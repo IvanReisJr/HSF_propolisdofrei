@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Ajustar Estoque - {{ product.name }} - Própolis do Frei{% endblock %}
+
+{% block breadcrumbs %}
+<a href="{% url 'dashboard' %}" class="hover:text-primary transition-colors" style="color: #a3a3a3; text-decoration: none;">Início</a> <span style="color: #a3a3a3;"> / </span> 
+<a href="{% url 'product_list' %}" class="hover:text-primary transition-colors" style="color: #a3a3a3; text-decoration: none;">Produtos</a> <span style="color: #a3a3a3;"> / </span>
+<a href="{% url 'product_detail' product.pk %}" class="hover:text-primary transition-colors" style="color: #a3a3a3; text-decoration: none;">{{ product.name }}</a> <span style="color: #a3a3a3;"> / </span>
+<span style="font-weight: 600;">Ajustar Estoque</span>
+{% endblock %}
+
+{% block content %}
+<div class="flex-col gap-6" style="max-width: 600px; margin: 0 auto;">
+    <div class="flex items-center gap-4">
+        <a href="{% url 'product_detail' product.pk %}" class="btn btn-outline p-2">
+            <i data-lucide="arrow-left"></i>
+        </a>
+        <h1 style="font-size: 1.875rem; font-weight: 700;">Ajustar Estoque</h1>
+    </div>
+
+    <form method="post" class="card flex-col gap-6">
+        {% csrf_token %}
+
+        <div class="p-4" style="background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
+            <p style="color: #666; font-size: 0.875rem;">Produto</p>
+            <p style="font-weight: 600; font-size: 1.125rem;">{{ product.name }}</p>
+            <p style="color: #666; font-size: 0.875rem;">SKU: {{ product.code }}</p>
+        </div>
+
+        <!-- Lote e Validade -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <div class="flex-col gap-2">
+                <label class="label">Lote</label>
+                <input type="text" name="batch" class="input" required placeholder="Ex: LOTE2023001" value="{{ batch|default:'' }}">
+            </div>
+            
+            <div class="flex-col gap-2">
+                <label class="label">Data de Validade</label>
+                <input type="date" name="expiration_date" class="input" required value="{{ expiration_date|default:'' }}">
+            </div>
+        </div>
+
+        <!-- Quantidade e Motivo -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <div class="flex-col gap-2">
+                <label class="label">Quantidade Atual (Física)</label>
+                <input type="number" name="quantity" class="input" min="0" required placeholder="Ex: 50" value="{{ quantity|default:'' }}">
+                <span style="font-size: 0.75rem; color: #666;">Informe a quantidade total encontrada.</span>
+            </div>
+
+            <div class="flex-col gap-2">
+                <label class="label">Motivo do Ajuste</label>
+                <select name="reason" class="input" required style="background-color: white !important;">
+                    <option value="">Selecione...</option>
+                    <option value="Inventário Inicial">Inventário Inicial</option>
+                    <option value="Correção de Saldo">Correção de Saldo</option>
+                    <option value="Perda">Perda</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="flex justify-end items-center gap-3" style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-top: 1rem;">
+            <a href="{% url 'product_detail' product.pk %}" class="btn btn-outline">Cancelar</a>
+            <button type="submit" class="btn btn-primary">
+                <i data-lucide="check-circle"></i> Salvar Ajuste
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    .label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #404040;
+    }
+</style>
+{% endblock %}

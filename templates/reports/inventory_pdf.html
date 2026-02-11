@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Relatório de Inventário</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1cm;
+        }
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #4B3621;
+            padding-bottom: 10px;
+        }
+        .header h1 {
+            color: #4B3621;
+            margin: 0;
+            font-size: 18pt;
+        }
+        .header p {
+            margin: 5px 0;
+            color: #666;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th {
+            background-color: #4B3621;
+            color: #FFF;
+            padding: 8px;
+            text-align: left;
+            font-size: 9pt;
+        }
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+            font-size: 9pt;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 8pt;
+            color: #999;
+            border-top: 1px solid #ddd;
+            padding-top: 5px;
+        }
+        .badge-danger {
+            color: #DC2626;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Própolis do Frei - Relatório de Estoque</h1>
+        <p>{{ report_subtitle }}</p>
+        <p>Gerado em: {% now "d/m/Y H:i" %} por {{ user.get_full_name|default:user.username }}</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                {% if is_matriz and "Visão Geral" in report_subtitle %}
+                <th width="20%">Unidade</th>
+                <th width="30%">Produto</th>
+                {% else %}
+                <th width="50%">Produto</th>
+                {% endif %}
+                <th width="15%">Lote</th>
+                <th width="15%">Validade</th>
+                <th width="10%" class="text-right">Saldo</th>
+                <th width="10%">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stock in stocks %}
+            <tr>
+                {% if is_matriz and "Visão Geral" in report_subtitle %}
+                <td>{{ stock.distributor.name }}</td>
+                {% endif %}
+                <td>
+                    <strong>{{ stock.product.name }}</strong><br>
+                    <small>{{ stock.product.code }}</small>
+                </td>
+                <td>{{ stock.batch }}</td>
+                <td>{{ stock.expiration_date|date:"d/m/Y"|default:"-" }}</td>
+                <td class="text-right">{{ stock.current_stock }}</td>
+                <td>
+                    {% if stock.current_stock < stock.product.min_stock %}
+                    <span class="badge-danger">CRÍTICO</span>
+                    {% else %}
+                    NORMAL
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 20px;">Nenhum registro encontrado.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        Sistema Própolis do Frei - Uso Interno
+    </div>
+</body>
+</html>

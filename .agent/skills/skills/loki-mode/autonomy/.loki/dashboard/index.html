@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -90,17 +89,9 @@
             border-radius: 50%;
         }
 
-        .status-dot.active {
-            background: var(--green);
-        }
-
-        .status-dot.warning {
-            background: var(--yellow);
-        }
-
-        .status-dot.error {
-            background: var(--red);
-        }
+        .status-dot.active { background: var(--green); }
+        .status-dot.warning { background: var(--yellow); }
+        .status-dot.error { background: var(--red); }
 
         .section {
             margin-bottom: 32px;
@@ -124,7 +115,7 @@
             border-radius: 12px;
             padding: 20px;
             border: 1px solid var(--border);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
 
         .agent-header {
@@ -244,21 +235,10 @@
             font-weight: 600;
         }
 
-        .queue-column.pending .queue-header {
-            border-color: var(--yellow);
-        }
-
-        .queue-column.in-progress .queue-header {
-            border-color: var(--teal);
-        }
-
-        .queue-column.completed .queue-header {
-            border-color: var(--green);
-        }
-
-        .queue-column.failed .queue-header {
-            border-color: var(--red);
-        }
+        .queue-column.pending .queue-header { border-color: var(--yellow); }
+        .queue-column.in-progress .queue-header { border-color: var(--teal); }
+        .queue-column.completed .queue-header { border-color: var(--green); }
+        .queue-column.failed .queue-header { border-color: var(--red); }
 
         .task-card {
             background: var(--bg-cream);
@@ -306,14 +286,12 @@
             .queue-columns {
                 grid-template-columns: 1fr;
             }
-
             .agents-grid {
                 grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
-
 <body>
     <div class="header">
         <div class="logo">
@@ -471,11 +449,11 @@
                         <span class="stat">Runtime: ${agent.runtime}</span>
                         <span class="stat">Tasks: ${agent.tasks}</span>
                     </div>
-                    <div class="agent-status ${agent.status ==  = 'active' ? 'status-active' : 'status-completed'} ">
-            < div class="status-dot ${agent.status   ==  = 'active' ? 'active' : ''}" ></div >
-                ${ agent.status ==  = 'active' ? 'Active' : 'Completed' }
-                    </div >
-                </div >
+                    <div class="agent-status ${agent.status === 'active' ? 'status-active' : 'status-completed'}">
+                        <div class="status-dot ${agent.status === 'active' ? 'active' : ''}"></div>
+                        ${agent.status === 'active' ? 'Active' : 'Completed'}
+                    </div>
+                </div>
             `).join('');
         }
 
@@ -483,12 +461,12 @@
             const renderTaskList = (tasks, containerId) => {
                 const container = document.getElementById(containerId);
                 container.innerHTML = tasks.map(task => `
-            < div class="task-card" >
+                    <div class="task-card">
                         <div class="task-id">${task.id}</div>
                         <span class="task-type">${task.type}</span>
                         <div class="task-desc">${task.desc}</div>
-                    </div >
-            `).join('');
+                    </div>
+                `).join('');
             };
 
             renderTaskList(demoTasks.pending, 'pending-tasks');
@@ -504,7 +482,7 @@
 
         function updateTimestamp() {
             const now = new Date().toLocaleString();
-            document.getElementById('last-updated').textContent = `Last updated: ${ now }`;
+            document.getElementById('last-updated').textContent = `Last updated: ${now}`;
         }
 
         // Initial render
@@ -516,5 +494,4 @@
         setInterval(updateTimestamp, 3000);
     </script>
 </body>
-
 </html>

@@ -27,3 +27,7 @@ staticfiles/
 # OS
 .DS_Store
 Thumbs.db
+
+# Agent folders
+.agente/
+.agente 2/

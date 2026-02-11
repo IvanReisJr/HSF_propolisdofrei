@@ -17,10 +17,10 @@
         <div class="flex justify-between items-center relative z-10">
             <div>
                 <h1 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">Visão Consolidada de Estoque</h1>
-                <p style="font-size: 0.875rem; opacity: 0.9;">Monitoramento unificado entre CD Humanitas e Sede Administrativa.</p>
+                <p style="font-size: 0.875rem; opacity: 0.9;">Estoque unificado para todas as unidades Matriz.</p>
             </div>
             <div style="background: rgba(255,255,255,0.5); padding: 0.5rem; border-radius: 8px;">
-                <i data-lucide="bar-chart-2" style="width: 32px; height: 32px; color: #92400E;"></i>
+                <i data-lucide="layers" style="width: 32px; height: 32px; color: #92400E;"></i>
             </div>
         </div>
     </div>
@@ -33,9 +33,7 @@
                     <tr style="background: #FAFAFA; border-bottom: 2px solid #E5E5E5;">
                         <th style="padding: 1rem; text-align: left; font-size: 0.875rem; color: #666; font-weight: 600;">Produto</th>
                         <th style="padding: 1rem; text-align: left; font-size: 0.875rem; color: #666; font-weight: 600;">Lote</th>
-                        <th style="padding: 1rem; text-align: center; font-size: 0.875rem; color: #666; font-weight: 600;">CD Humanitas (Saldo)</th>
-                        <th style="padding: 1rem; text-align: center; font-size: 0.875rem; color: #666; font-weight: 600;">CD Sede Adm (Saldo)</th>
-                        <th style="padding: 1rem; text-align: right; font-size: 0.875rem; color: #4B3621; font-weight: 700;">Total Global</th>
+                        <th style="padding: 1rem; text-align: right; font-size: 0.875rem; color: #4B3621; font-weight: 700;">Saldo Disponível</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -61,19 +59,13 @@
                             <span style="color: #9CA3AF; font-size: 0.875rem;">-</span>
                             {% endif %}
                         </td>
-                        <td style="padding: 1rem; text-align: center; font-weight: 500; color: #4B5563;">
-                            {{ item.humanitas }}
-                        </td>
-                        <td style="padding: 1rem; text-align: center; font-weight: 500; color: #4B5563;">
-                            {{ item.sede_adm }}
-                        </td>
-                        <td style="padding: 1rem; text-align: right; font-weight: 700; color: #059669;">
+                        <td style="padding: 1rem; text-align: right; font-weight: 700; color: #059669; font-size: 1.125rem;">
                             {{ item.total }}
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" style="padding: 4rem; text-align: center; color: #9CA3AF;">
+                        <td colspan="3" style="padding: 4rem; text-align: center; color: #9CA3AF;">
                             <i data-lucide="inbox" style="width: 48px; height: 48px; display: block; margin: 0 auto 1rem; opacity: 0.3;"></i>
                             <p>Nenhum dado de estoque encontrado.</p>
                         </td>

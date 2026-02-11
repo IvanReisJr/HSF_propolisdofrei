@@ -7,6 +7,52 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ## [Não Lançado]
 
+### 2026-02-11 (Fluxo de Segurança, UX e Dashboard)
+
+#### Adicionado
+- **Novo Dashboard com Abas**: Implementação de sistema de abas (Visão Geral, Gráficos, Pedidos, Alertas) para melhor organização da informação.
+- **Gráficos Interativos**: Integração com Chart.js para visualização de "Valor em Estoque por Categoria" e "Movimentação (7 dias)".
+- **Filtros de Pedidos**: Funcionalidade de filtragem por status na aba de Pedidos do dashboard.
+- **Fluxo de Segurança em Pedidos**: Novo status `AUTORIZADO` e fluxo de aprovação em duas etapas (Matriz Autoriza -> Filial Confirma/Baixa).
+- **Controle de Acesso**: View `order_authorize` restrita a usuários da Matriz.
+- **Bloqueio de UI**: Botão "Confirmar e Baixar Estoque" desabilitado para Filiais enquanto o pedido não for autorizado.
+
+#### Corrigido
+- **Erro de Backend**: Correção no `order_confirm` onde `created_at` era chamado indevidamente no modelo de estoque (`updated_at` utilizado).
+- **Layout de Lista**: Correção das colunas "Unidade Origem" e "Destino (Filial)" na listagem de pedidos para exibir os nomes corretos.
+- **Exibição de Quantidade**: Alterado de "X G" para "X un" nos detalhes do pedido para evitar confusão.
+
+#### Alterado
+- **Template de Detalhes**: Reorganização dos botões de ação com feedback visual claro (botão desabilitado/muted).
+
+### 2026-02-10 (Sincronização e Correção de Estoque)
+
+#### Adicionado
+- **Script de Recálculo**: Adicionado o script `recalculate_stock.py` para corrigir saldos de estoque inconsistentes.
+- **django-extensions**: O pacote foi adicionado ao projeto para facilitar a execução de scripts.
+
+#### Corrigido
+- **Dessincronização de Estoque**: Corrigido o problema que causava a dessincronização entre o saldo (`ProductStock`) e o histórico (`StockMovement`) ao adicionar o decorador `@transaction.atomic` às views `registrar_entrada` e `registrar_saida`.
+- **Permissão de Estorno**: Superusuários agora podem registrar saídas (estornos) mesmo com saldo insuficiente, permitindo correções manuais.
+
+#### Técnico
+- O script de recálculo de estoque foi movido para `apps/stock/scripts` para seguir as convenções do `django-extensions`.
+- A lógica de validação de estoque na view `registrar_saida` foi ajustada para ignorar a verificação de saldo para superusuários.
+
+### 2026-02-10 (Limpeza de Legado)
+
+#### Removido
+- **Establishment**: Modelo e App `apps.establishments` removidos definitivamente.
+- **Código Legado**: Referências a `Establishment` removidas de `apps/stock`, `apps/products` e `settings.py`.
+
+#### Corrigido
+- Erro `name 'Establishment' is not defined` ao salvar movimentações de estoque.
+- Erro na renderização de `distributor.state` na listagem de unidades.
+- Serializers de Estoque (`StockMovementSerializer`) atualizados para usar `distributor_name` em vez de `establishment_name`.
+
+#### Técnico
+- Unificação completa do fluxo de estoque para usar `Distributor` como fonte de verdade.
+
 ### 2026-02-05 (Fase 02 - Blindagem & Estoque)
 
 #### Adicionado

@@ -25,7 +25,6 @@ O projeto está dividido em aplicações pequenas e focadas dentro da pasta `app
 | App | Responsabilidade | Models Principais |
 |-----|------------------|-------------------|
 | `authentication` | Gestão de usuários e login customizado | `User` (AbstractUser) |
-| `establishments` | [LEGADO] Unidades físicas (substituído por Distributors) | `Establishment` |
 | `products` | Catálogo, Categorias e Unidades de Medida | `Product`, `Category`, `ProductStock` |
 | `stock` | Movimentações (Entrada/Saída) e Auditoria | `StockMovement` |
 | `orders` | Pedidos de distribuição entre unidades | `Order`, `OrderItem` |
@@ -80,7 +79,7 @@ Implementamos um isolamento lógico robusto para garantir que usuários de uma f
 ### 5.1. Isolamento de Dados
 - **Distributor como Entidade Central**: `ProductStock`, `StockMovement`, `Order` e `Packaging` agora são vinculados diretamente a `Distributor`.
 - **Regra de Ouro**: Filtros globais garantem que usuários comuns só vejam registros onde `distributor = request.user.distributor`.
-- **Establishment Depreciado**: O antigo modelo `Establishment` foi substituído funcionalmente por `Distributor` (que agora possui tipo MATRIZ/FILIAL).
+- **Establishment Removido**: O antigo modelo `Establishment` foi removido definitivamente do código base, sendo substituído integralmente por `Distributor`.
 
 ### 5.2. Segurança e Controle
 - **Inativação Segura (Soft Delete)**: `is_active` em vez de `delete()` físico para modelos críticos (`Product`, `Category`, `Distributor`).

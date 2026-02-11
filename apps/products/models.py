@@ -143,15 +143,26 @@ class Product(models.Model):
         self.save()
 
     def get_total_stock(self):
-        """Retorna estoque total em todos os estabelecimentos"""
-        return self.stocks.aggregate(
+        """
+        Retorna estoque total consolidado da Matriz.
+        Se houver filiais, elas devem ser somadas separadamente ou conforme regra específica.
+        Nesta implementação, somamos TUDO que é do tipo MATRIZ.
+        """
+        # Evita import circular
+        from apps.distributors.models import Distributor
+        
+        matriz_distributors = Distributor.objects.filter(tipo_unidade='MATRIZ')
+        
+        return self.stocks.filter(
+            distributor__in=matriz_distributors
+        ).aggregate(
             total=models.Sum('current_stock')
         )['total'] or 0
 
-    def get_stock_by_establishment(self, establishment):
-        """Retorna estoque de um estabelecimento específico"""
+    def get_stock_by_distributor(self, distributor):
+        """Retorna estoque de uma unidade específica"""
         try:
-            stock = self.stocks.get(establishment=establishment)
+            stock = self.stocks.get(distributor=distributor)
             return stock.current_stock
         except ProductStock.DoesNotExist:
             return 0
@@ -176,15 +187,7 @@ class ProductStock(models.Model):
         related_name='stocks',
         verbose_name=_('Produto')
     )
-    establishment = models.ForeignKey(
-        'establishments.Establishment',
-        on_delete=models.CASCADE,
-        related_name='product_stocks',
-        verbose_name=_('Estabelecimento'),
-        null=True,
-        blank=True,
-        help_text=_('[DEPRECATED] Campo depreciado na Fase 02. Use o campo Distribuidor.')
-    )
+    # establishment field removed (merged into distributor)
     distributor = models.ForeignKey(
         'distributors.Distributor',
         on_delete=models.CASCADE,
@@ -208,4 +211,4 @@ class ProductStock(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.product.name} - {self.establishment.name}: {self.current_stock}"
+        return f"{self.product.name} - {self.distributor.name}: {self.current_stock}"

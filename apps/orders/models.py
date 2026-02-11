@@ -9,6 +9,7 @@ from apps.core.models import Sequence  # Import Sequence
 class OrderStatus(models.TextChoices):
     """Status do pedido"""
     PENDENTE = 'pendente', _('Pendente')
+    AUTORIZADO = 'autorizado', _('Autorizado')
     CONFIRMADO = 'confirmado', _('Confirmado')
     CANCELADO = 'cancelado', _('Cancelado')
     ENTREGUE = 'entregue', _('Entregue')
@@ -21,15 +22,6 @@ class Order(models.Model):
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     order_number = models.CharField(_('Número do Pedido'), max_length=50, unique=True)
-    establishment = models.ForeignKey(
-        'establishments.Establishment',
-        on_delete=models.PROTECT,
-        related_name='orders',
-        verbose_name=_('Estabelecimento (Legado)'),
-        help_text=_('Campo legado. Use target_distributor.'),
-        null=True,
-        blank=True
-    )
     distributor = models.ForeignKey(
         'distributors.Distributor',
         on_delete=models.SET_NULL,
@@ -75,7 +67,7 @@ class Order(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.order_number} - {self.establishment.name}"
+        return f"{self.order_number} - {self.distributor.name if self.distributor else 'N/A'}"
 
     def save(self, *args, **kwargs):
         if not self.order_number:

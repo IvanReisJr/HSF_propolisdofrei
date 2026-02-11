@@ -7,4 +7,7 @@ urlpatterns = [
     path('units/new/', views.unit_create, name='unit_create'),
     path('units/<uuid:pk>/edit/', views.unit_edit, name='unit_edit'),
     path('units/<uuid:pk>/inativar/', views.inativar_unidade, name='inativar_unidade'),
+    
+    # Simulator
+    path('switch-distributor/', views.switch_distributor, name='switch_distributor'),
 ]

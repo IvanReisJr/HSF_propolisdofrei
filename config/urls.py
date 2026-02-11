@@ -1,16 +1,23 @@
 from django.contrib import admin
+from django.contrib.auth import views as auth_views
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
-from .views import dashboard
+from .views import dashboard, htmx_load_movements
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', dashboard, name='dashboard'),
-    path('accounts/', include('django.contrib.auth.urls')),
+    path('htmx/load-movements/', htmx_load_movements, name='htmx_load_movements'),
+    
+    # Auth URLs - Simplified
+    path('login/', auth_views.LoginView.as_view(), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('accounts/login/', auth_views.LoginView.as_view()), # Compatibility
+    
+    # path('accounts/', include('django.contrib.auth.urls')), # Disabled to prevent password reset access
     path('products/', include('apps.products.urls')),
-    path('establishments/', include('apps.establishments.urls')),
     path('stock/', include('apps.stock.urls')),
     path('orders/', include('apps.orders.urls')),
     path('audit/', include('apps.audit.urls')),

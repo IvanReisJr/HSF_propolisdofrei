@@ -2,34 +2,114 @@
 
 {% block title %}Dashboard - Própolis do Frei{% endblock %}
 
+{% block extra_head %}
+<style> 
+#modal-movimentacoes { 
+    display: none !important; 
+    position: fixed !important; 
+    inset: 0 !important; 
+    z-index: 99999 !important; 
+    background: rgba(0,0,0,0.7); 
+    align-items: center; 
+    justify-content: center; 
+}
+#modal-movimentacoes[style*="display: flex"] { 
+    display: flex !important; 
+}
+
+/* Estilos para o modal e cards */
+.custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; } 
+.custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; } 
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 10px; } 
+
+#card-movimentacoes {
+    cursor: pointer !important;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+#card-movimentacoes:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+.animate-heartbeat { 
+  animation: heartbeat 1.5s ease-in-out infinite; 
+  transform-origin: center; 
+  color: #2563eb !important; /* Azul vibrante */ 
+} 
+@keyframes heartbeat { 
+  0% { transform: scale(1); opacity: 0.7; } 
+  15% { transform: scale(1.3); opacity: 1; } 
+  30% { transform: scale(1); opacity: 0.7; } 
+  45% { transform: scale(1.15); opacity: 0.9; } 
+  100% { transform: scale(1); opacity: 0.7; } 
+}
+
+@media (max-height: 800px) { 
+  .painel-de-controle { padding: 1rem !important; } 
+  .painel-de-controle h1 { font-size: 1.75rem !important; } 
+  .painel-de-controle p { font-size: 0.875rem !important; } 
+} 
+
+.tab-content table thead th { 
+  position: sticky; 
+  top: 0; 
+  background: #f9fafb; 
+  z-index: 10; 
+  box-shadow: inset 0 -1px 0 #e5e7eb; 
+}
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script> 
+document.addEventListener('DOMContentLoaded', function() { 
+    // Fecha no Esc 
+    document.addEventListener('keydown', (e) => { 
+        if (e.key === 'Escape') {
+            document.getElementById('modal-movimentacoes').style.display = 'none';
+        }
+    }); 
+}); 
+</script>
+{% endblock %}
+
 {% block breadcrumbs %}
 <span style="color: #a3a3a3;">Início / </span> <span style="font-weight: 600;">Dashboard</span>
 {% endblock %}
 
 {% block content %}
+<script> 
+    // Define a função diretamente no objeto window para garantir visibilidade 
+    window.abrirModalForçado = function() { 
+        console.log("BOTÃO CLICADO COM SUCESSO!"); 
+        const m = document.getElementById('modal-movimentacoes'); 
+        if (m) { 
+            m.style.display = 'flex'; 
+        } else { 
+            console.error("ERRO: Elemento 'modal-movimentacoes' não encontrado!"); 
+        } 
+    }; 
+</script>
 <div class="flex-col gap-6 animate-enter">
 
-    <!-- Hero Section: Sovereign Light & Textured -->
-    <div class="card p-6 relative overflow-hidden"
+    <!-- Hero Section -->
+    <div class="card p-6 relative overflow-hidden painel-de-controle"
         style="background: linear-gradient(135deg, #FFF8E1 0%, #F3E5AB 100%); color: #4B3621; border: 1px solid #D4AF37;">
-        <!-- Texture Overlay (Subtle Pattern) -->
-        <div
-            style="position: absolute; inset: 0; opacity: 0.4; background-image: url('data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23D4AF37' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E'); pointer-events: none;">
+        <!-- Texture Overlay -->
+        <div style="position: absolute; inset: 0; opacity: 0.4; background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23D4AF37\' fill-opacity=\'0.2\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E'); pointer-events: none;">
         </div>
 
-        <div class="flex justify-between items-end relative z-10">
+        <div class="flex flex-col md:flex-row justify-between items-end relative z-10 gap-4">
             <div>
-                <p
-                    style="color: #92400E; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.75rem; margin-bottom: 0.5rem; display: flex; items-center; gap: 0.5rem;">
+                <p style="color: #92400E; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.75rem; margin-bottom: 0.5rem; display: flex; items-center; gap: 0.5rem;">
                     <i data-lucide="sun" style="width: 14px; color: #D4AF37;"></i> Painel de Controle
                 </p>
-                <h1
-                    style="font-size: 2.5rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 0.5rem; color: #4B3621;">
+                <h1 style="font-size: 2.5rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 0.5rem; color: #4B3621;">
                     Olá, {{ user.first_name }}
                 </h1>
                 <p style="color: #78350F; max-width: 700px; font-weight: 500;">
-                    Gestão ativa da unidade <strong style="color: #B45309;">{{ user.distributor.name|default:"Geral" }}</strong>. Você tem <strong
-                        style="color: #B45309; background: rgba(255,255,255,0.5); padding: 0 4px; border-radius: 2px;">{{ stats.pending_orders|default:"0" }} distribuições</strong> pendentes hoje.
+                    Gestão ativa da unidade <strong style="color: #B45309;">{{ user.distributor.name|default:"Geral" }}</strong>.
+                    Você tem <strong style="color: #B45309; background: rgba(255,255,255,0.5); padding: 0 4px; border-radius: 2px;">{{ stats.pending_orders|default:"0" }} distribuições</strong> pendentes.
                 </p>
 
                 <div class="flex gap-3 mt-6">
@@ -37,174 +117,431 @@
                         style="background: #4B3621; color: #FFF8E1; border: none; border-radius: 2px; box-shadow: 0 4px 6px -1px rgba(75, 54, 33, 0.2);">
                         <i data-lucide="plus" style="width: 18px;"></i> Novo Produto
                     </a>
-                    <a href="/orders/new/" class="btn hover-lift"
+                    <a href="{% url 'order_create' %}" class="btn hover-lift"
                         style="color: #4B3621; border: 1px solid #B45309; background: rgba(255,255,255,0.6);">
                         <i data-lucide="send" style="width: 18px;"></i> Nova Distribuição
                     </a>
                 </div>
             </div>
-
-            <!-- Heavenly Light Element -->
-            <div
-                style="position: absolute; right: -40px; top: -60px; width: 300px; height: 300px; background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%); border-radius: 50%; opacity: 0.6; pointer-events: none; mix-blend-mode: overlay;">
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Stats Grid: Broken Symmetry (3 + 1 Big) -->
-<div style="display: grid; grid-template-columns: repeat(3, 1fr) 1.5fr; gap: 1rem;">
-
-    <!-- Stat 1 -->
-    <a href="{% url 'product_list' %}" class="card p-4 hover-lift stats-card"
-        style="border-left: 2px solid var(--primary); text-decoration: none; color: inherit; display: block;">
-        <div class="flex justify-between items-start mb-2">
-            <span class="label">Produtos Ativos</span>
-            <i data-lucide="package" style="color: var(--primary); width: 16px; opacity: 0.7;"></i>
-        </div>
-        <div class="stats-value" style="font-size: 1.75rem; font-weight: 800;">{{ stats.products_count }}</div>
-        <div style="font-size: 0.75rem; color: var(--success); font-weight: 600;">+2.4% <span
-                style="color: #999; font-weight: 400;">vs mês passado</span></div>
-    </a>
-
-    <!-- Stat 2 -->
-    <div class="card p-4 hover-lift stats-card" style="border-left: 2px solid #DC2626;">
-        <div class="flex justify-between items-start mb-2">
-            <span class="label">Estoque Crítico</span>
-            <i data-lucide="alert-triangle" style="color: #DC2626; width: 16px; opacity: 0.7;"></i>
-        </div>
-        <div class="stats-value" style="font-size: 1.75rem; font-weight: 800;">{{ stats.low_stock_count }}</div>
-        <div style="font-size: 0.75rem; color: #DC2626; font-weight: 600;">Ação necessária</div>
-    </div>
-
-    <!-- Stat 3 -->
-    <div class="card p-4 hover-lift stats-card" style="border-left: 2px solid #2563EB;">
-        <div class="flex justify-between items-start mb-2">
-            <span class="label">Movimentações</span>
-            <i data-lucide="activity" style="color: #2563EB; width: 16px; opacity: 0.7;"></i>
-        </div>
-        <div class="stats-value" style="font-size: 1.75rem; font-weight: 800;">{{ stats.movements_count }}</div>
-        <div style="font-size: 0.75rem; color: #A3A3A3;">Últimas 24h</div>
-    </div>
-
-    <!-- Big Stat (Asymmetric Focus) -->
-    <div class="card p-4 hover-lift relative overflow-hidden flex flex-col justify-center"
-        style="background: linear-gradient(to right, #111, #1A1A1A); color: white; border: 1px solid #333;">
-        <div style="position: absolute; right: -10px; bottom: -10px; opacity: 0.1;">
-            <i data-lucide="bar-chart-2" style="width: 100px; height: 100px;"></i>
-        </div>
-        <div class="label" style="color: #888;">Faturamento Mensal (Est.)</div>
-        <div class="flex items-baseline gap-2">
-            <span style="font-size: 2.25rem; font-weight: 800; color: #D4AF37;">R$ 45.280</span>
-            <span style="color: var(--success); font-weight: 600; font-size: 0.875rem;">▲ 12%</span>
-        </div>
-        <div
-            style="height: 4px; width: 100%; background: #333; margin-top: 1rem; border-radius: 99px; overflow: hidden;">
-            <div style="height: 100%; width: 75%; background: #D4AF37;"></div>
-        </div>
-    </div>
-</div>
-
-<!-- Bottom Section: 2-column grid (Recent Orders + Action Cards) -->
-<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
-    <!-- Recent Orders (Left column) -->
-    <div class="card">
-        <div class="flex justify-between items-center mb-6">
-            <h3 style="font-size: 1.125rem; font-weight: 700;">Distribuições Recentes</h3>
-            <a href="/orders/"
-                style="font-size: 0.75rem; font-weight: 600; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em;">Ver
-                Todas →</a>
-        </div>
-
-        <div style="overflow-x: hidden;">
-            <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
-                <tbody>
-                    {% for order in recent_orders|slice:":3" %}
-                    <tr class="hover-bg-gray-50 transition-colors" style="cursor: pointer;"
-                        onclick="window.location='/orders/{{ order.id }}/'">
-                        <td style="padding: 1rem 0; border-bottom: 1px solid #f1f1f1;">
-                            <div style="font-family: var(--font-mono); font-weight: 600; color: #111;">
-                                {{ order.order_number }}</div>
-                            <div style="font-size: 0.75rem; color: #888;">{{ order.created_at|date:"d/m H:i" }}
-                            </div>
-                        </td>
-                        <td style="padding: 1rem 0; border-bottom: 1px solid #f1f1f1;">
-                            <div style="font-weight: 600;">{{ order.distributor.name }}</div>
-                            <div style="font-size: 0.75rem; color: #888;">{{ order.items.count }} itens</div>
-                        </td>
-                        <td style="padding: 1rem 0; border-bottom: 1px solid #f1f1f1;">
-                            <span
-                                style="padding: 0.25rem 0.5rem; border-radius: 2px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
-                                background: {% if order.status   ==   'pendente' %}#FFFBEB; color: #B45309{% elif order.status   ==   'confirmado' %}#ECFDF5; color: #047857{% else %}#F3F4F6; color: #374151{% endif %};">
-                                {{ order.get_status_display }}
-                            </span>
-                        </td>
-                        <td
-                            style="padding: 1rem 0; border-bottom: 1px solid #f1f1f1; text-align: right; font-weight: 700; color: #111;">
-                            R$ {{ order.total_amount }}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" style="padding: 3rem; text-align: center; color: #a3a3a3;">
-                            <i data-lucide="inbox"
-                                style="width: 32px; height: 32px; opacity: 0.3; margin-bottom: 0.5rem;"></i>
-                            <p>Nenhuma distribuição recente.</p>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
         </div>
     </div>
 
-    <!-- Action Cards (Right column, stacked) -->
-    <div class="flex flex-col gap-4">
-        <!-- Top Row: Shared Space (50% each) -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
-            <!-- Action Card 1: Inventário -->
-            <a href="{% url 'dashboard_matriz_consolidado' %}"
-                class="card p-4 hover-lift flex flex-col items-center justify-center gap-2 hover-glow text-center"
-                style="border: 1px solid #E5E5E5;">
-                <div
-                    style="background: #FFFBEB; padding: 0.5rem; border-radius: 2px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
-                    <i data-lucide="clipboard-list" style="color: #D4AF37; width: 18px;"></i>
-                </div>
-                <div>
-                    <div style="font-weight: 700; font-size: 0.875rem;">Inventário</div>
-                </div>
-            </a>
-
-            <!-- Action Card 2: Relatórios -->
-            <a href="/reports/"
-                class="card p-4 hover-lift flex flex-col items-center justify-center gap-2 hover-glow text-center"
-                style="border: 1px solid #E5E5E5;">
-                <div
-                    style="background: #ECFDF5; padding: 0.5rem; border-radius: 2px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
-                    <i data-lucide="bar-chart-3" style="color: #059669; width: 18px;"></i>
-                </div>
-                <div>
-                    <div style="font-weight: 700; font-size: 0.875rem;">Relatórios</div>
-                </div>
-            </a>
-        </div>
-
-        <!-- Contextual Help -->
-        <div class="card p-4"
-            style="background: #111; color: white; border-radius: 2px; position: relative; overflow: hidden;">
-            <div
-                style="position: absolute; right: -10px; top: -10px; width: 80px; height: 80px; background: rgba(212,175,55,0.2); border-radius: 50%; blur: 20px;">
-            </div>
-            <h4 style="font-weight: 700; margin-bottom: 0.5rem; position: relative; z-index: 2;">Precisa de suporte?
-            </h4>
-            <p style="font-size: 0.75rem; color: #AAA; margin-bottom: 1rem; position: relative; z-index: 2;">Acesse
-                a documentação completa do sistema.</p>
-            <button class="btn"
-                style="width: 100%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white;">
-                Abrir Manual
+    <!-- Tabs Navigation -->
+    <div class="mb-6 border-b border-gray-200">
+        <nav class="flex space-x-8" aria-label="Tabs">
+            <button onclick="switchTab('visao-geral')" id="tab-btn-visao-geral"
+                class="tab-btn border-b-2 border-primary py-4 px-1 text-sm font-medium text-primary hover:border-primary-dark hover:text-primary-dark focus:outline-none transition-colors"
+                aria-current="page">
+                Visão Geral
             </button>
+            <button onclick="switchTab('graficos')" id="tab-btn-graficos"
+                class="tab-btn border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 focus:outline-none transition-colors">
+                Gráficos
+            </button>
+            <button onclick="switchTab('pedidos')" id="tab-btn-pedidos"
+                class="tab-btn border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 focus:outline-none transition-colors">
+                Pedidos (Grid)
+            </button>
+            <button onclick="switchTab('alertas')" id="tab-btn-alertas"
+                class="tab-btn border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 focus:outline-none transition-colors flex items-center gap-2">
+                Alertas
+                {% if stats.low_stock_count > 0 %}
+                <span class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
+                    {{ stats.low_stock_count }}
+                </span>
+                {% endif %}
+            </button>
+        </nav>
+    </div>
+
+    <!-- TAB 1: VISÃO GERAL -->
+    <div id="tab-visao-geral" class="tab-content block space-y-6">
+        
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Stat 1 -->
+            <a href="{% url 'product_list' %}" class="card p-4 hover-lift stats-card border-l-4 border-primary block no-underline text-inherit">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="label text-sm font-medium text-gray-600">Produtos Ativos</span>
+                    <i data-lucide="package" class="w-4 h-4 text-primary opacity-70"></i>
+                </div>
+                <div class="text-2xl font-bold">{{ stats.products_count }}</div>
+            </a>
+
+            <!-- Stat 2 -->
+            <div class="card p-4 hover-lift stats-card border-l-4 border-red-600">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="label text-sm font-medium text-gray-600">Estoque Crítico</span>
+                    <i data-lucide="alert-triangle" class="w-4 h-4 text-red-600 opacity-70"></i>
+                </div>
+                <div class="text-2xl font-bold">{{ stats.low_stock_count }}</div>
+                <div class="mt-2 text-xs text-red-600 font-semibold">
+                    Produtos < 10 un
+                </div>
+            </div>
+
+            <!-- Stat 3 -->
+            <div id="card-movimentacoes" onclick="window.abrirModalForçado()" class="card p-4 hover-lift stats-card border-l-4 border-blue-600 card-movimentacoes">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="label text-sm font-medium text-gray-600">Movimentações</span>
+                    <i data-lucide="activity" class="w-4 h-4 text-blue-600 opacity-70 animate-heartbeat"></i>
+                </div>
+                <div>
+                    <span class="text-2xl font-bold">{{ stats.movements_count }}</span>
+                </div>
+                <div class="mt-2 text-xs text-blue-600 font-semibold">
+                    Últimas 24h
+                </div>
+            </div>
+
+            <!-- Stat 4 (Pending Orders) -->
+            <div class="card p-4 hover-lift stats-card border-l-4 border-yellow-500">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="label text-sm font-medium text-gray-600">Pedidos Pendentes</span>
+                    <i data-lucide="clock" class="w-4 h-4 text-yellow-500 opacity-70"></i>
+                </div>
+                <div class="text-2xl font-bold">{{ stats.pending_orders }}</div>
+            </div>
+        </div>
+
+        <!-- Action Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <a href="{% url 'inventory_pdf' %}" target="_blank" rel="noopener noreferrer" class="card p-4 hover-lift flex items-center gap-4 border border-gray-200" hx-boost="false">
+                <div class="bg-yellow-50 p-3 rounded-lg text-yellow-700">
+                    <i data-lucide="clipboard-list" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-gray-900">Inventário (PDF)</h3>
+                    <p class="text-sm text-gray-500">Gerar relatório de contagem</p>
+                </div>
+            </a>
+
+            <a href="{% url 'inventory_report' %}" class="card p-4 hover-lift flex items-center gap-4 border border-gray-200">
+                <div class="bg-green-50 p-3 rounded-lg text-green-700">
+                    <i data-lucide="bar-chart-3" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-gray-900">Relatórios Gerenciais</h3>
+                    <p class="text-sm text-gray-500">Análise de custos e movimentações</p>
+                </div>
+            </a>
+        </div>
+
+    </div>
+
+    <!-- TAB 2: GRÁFICOS -->
+    <div id="tab-graficos" class="tab-content hidden space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Chart 1 -->
+            <div class="card p-6 bg-white shadow-sm border border-gray-100 rounded-lg">
+                <h3 class="font-bold mb-6 text-lg text-gray-800 border-b pb-2">Valor em Estoque por Categoria</h3>
+                <div class="relative h-64 w-full">
+                    <canvas id="stockValueChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Chart 2 -->
+            <div class="card p-6 bg-white shadow-sm border border-gray-100 rounded-lg">
+                <h3 class="font-bold mb-6 text-lg text-gray-800 border-b pb-2">Movimentação (Últimos 7 dias)</h3>
+                <div class="relative h-64 w-full">
+                    <canvas id="movementsChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- TAB 3: PEDIDOS -->
+    <div id="tab-pedidos" class="tab-content hidden space-y-6">
+        <div class="card bg-white shadow-sm border border-gray-100 rounded-lg overflow-hidden">
+            <div class="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                <h3 class="font-bold text-lg text-gray-800">Histórico de Pedidos</h3>
+                <div class="flex gap-2 bg-gray-50 p-1 rounded-lg">
+                    <button onclick="filterOrders('all')" class="px-3 py-1.5 text-sm font-medium rounded-md bg-white shadow-sm text-gray-700 hover:text-gray-900 transition-all">Todos</button>
+                    <button onclick="filterOrders('pendente')" class="px-3 py-1.5 text-sm font-medium rounded-md text-gray-600 hover:bg-white hover:shadow-sm hover:text-yellow-700 transition-all">Pendentes</button>
+                    <button onclick="filterOrders('confirmado')" class="px-3 py-1.5 text-sm font-medium rounded-md text-gray-600 hover:bg-white hover:shadow-sm hover:text-green-700 transition-all">Confirmados</button>
+                </div>
+            </div>
+
+            <div class="tab-scroll-container custom-scrollbar" style="max-height: calc(100vh - 450px); overflow-y: auto; overflow-x: auto;">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pedido</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unidades (Origem -> Destino)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Total</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-100">
+                        {% for order in recent_orders %}
+                        <tr class="order-row hover:bg-gray-50 transition-colors" data-status="{{ order.status }}">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="font-mono font-bold text-gray-900">#{{ order.id|stringformat:".4s" }}</div>
+                                <div class="text-xs text-gray-500">{{ order.created_at|date:"d/m/Y H:i" }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-900 flex items-center gap-2">
+                                    <span class="font-medium">{{ order.distributor.name }}</span>
+                                    <i data-lucide="arrow-right" class="w-3 h-3 text-gray-400"></i>
+                                    <span class="font-medium">{{ order.target_distributor.name|default:"-" }}</span>
+                                </div>
+                                <div class="text-xs text-gray-500">{{ order.items.count }} itens</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full
+                                    {% if order.status == 'pendente' %}bg-yellow-100 text-yellow-800
+                                    {% elif order.status == 'autorizado' %}bg-blue-100 text-blue-800
+                                    {% elif order.status == 'confirmado' %}bg-green-100 text-green-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ order.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-gray-900">
+                                R$ {{ order.total_amount|floatformat:2 }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <a href="{% url 'order_detail' order.id %}" class="text-primary hover:text-primary-dark font-medium text-sm">
+                                    Detalhes
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                                <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 opacity-30"></i>
+                                <p>Nenhum pedido encontrado.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 4: ALERTAS -->
+    <div id="tab-alertas" class="tab-content hidden space-y-6">
+        <div class="card bg-white shadow-sm border border-red-100 rounded-lg overflow-hidden">
+            <div class="p-6 border-b border-red-50 bg-red-50/30 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="bg-red-100 p-2 rounded-lg">
+                        <i data-lucide="alert-triangle" class="w-5 h-5 text-red-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg text-red-900">Estoque Crítico</h3>
+                        <p class="text-sm text-red-700">Produtos com saldo inferior a 10 unidades</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-scroll-container custom-scrollbar" style="max-height: calc(100vh - 450px); overflow-y: auto; overflow-x: auto;">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produto</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Local (Distribuidor)</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo Atual</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-100">
+                        {% for item in low_stock_items %}
+                        <tr class="hover:bg-red-50/30 transition-colors">
+                            <td class="px-6 py-4">
+                                <div class="font-medium text-gray-900">{{ item.name }}</div>
+                                <div class="text-xs text-gray-500">{{ item.code }}</div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                {{ item.category }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                {{ item.distributor }}
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    {{ item.current_stock|default:0 }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <a href="{% url 'movement_create' %}?product={{ item.id }}" class="text-primary hover:text-primary-dark text-sm font-medium">
+                                    Repor
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                                <i data-lucide="check-circle" class="w-8 h-8 mx-auto mb-2 text-green-500 opacity-50"></i>
+                                <p>Tudo certo! Nenhum produto com estoque crítico.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
 </div>
+
+<!-- External Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // Tab Switching Logic
+    function switchTab(tabId) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(el => {
+            el.classList.add('hidden');
+            el.classList.remove('block');
+        });
+        
+        // Remove active class from buttons
+        document.querySelectorAll('.tab-btn').forEach(el => {
+            el.classList.remove('border-primary', 'text-primary');
+            el.classList.add('border-transparent', 'text-gray-500');
+        });
+        
+        // Show selected tab
+        const activeTab = document.getElementById('tab-' + tabId);
+        if (activeTab) {
+            activeTab.classList.remove('hidden');
+            activeTab.classList.add('block');
+        }
+        
+        // Highlight button
+        const activeBtn = document.getElementById('tab-btn-' + tabId);
+        if (activeBtn) {
+            activeBtn.classList.remove('border-transparent', 'text-gray-500');
+            activeBtn.classList.add('border-primary', 'text-primary');
+        }
+    }
+
+    // Filter Logic
+    function filterOrders(status) {
+        const rows = document.querySelectorAll('.order-row');
+        rows.forEach(row => {
+            if (status === 'all' || row.dataset.status === status) {
+                row.style.display = 'table-row';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    // Chart Initialization
+    document.addEventListener('DOMContentLoaded', function() {
+        // Stock Value Chart (Doughnut)
+        const stockCtx = document.getElementById('stockValueChart');
+        if (stockCtx) {
+            const stockLabels = {{ chart_data.stock_labels|safe }};
+            const stockValues = {{ chart_data.stock_values|safe }};
+            
+            new Chart(stockCtx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: stockLabels,
+                    datasets: [{
+                        data: stockValues,
+                        backgroundColor: [
+                            '#D4AF37', // Gold
+                            '#B45309', // Amber
+                            '#78350F', // Brown
+                            '#F59E0B', // Light Amber
+                            '#FFF8E1', // Cream
+                            '#A8A29E'  // Grey
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+        
+        // Movements Chart (Bar)
+        const moveCtx = document.getElementById('movementsChart');
+        if (moveCtx) {
+            const moveLabels = {{ chart_data.movements_labels|safe }};
+            const moveValues = {{ chart_data.movements_values|safe }};
+            
+            new Chart(moveCtx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: moveLabels,
+                    datasets: [{
+                        label: 'Movimentações',
+                        data: moveValues,
+                        backgroundColor: '#D4AF37',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#F3F4F6'
+                            },
+                            ticks: {
+                                stepSize: 1
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Initialize Icons
+        lucide.createIcons();
+    });
+</script>
+
+<div id="modal-movimentacoes" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:10000; align-items:center; justify-content:center; backdrop-filter:blur(4px);"> 
+    <div style="background:white; width:95%; max-width:1200px; border-radius:12px; overflow:hidden; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);"> 
+        <div class="p-4 border-b flex justify-between items-center bg-gray-50"> 
+            <h3 class="text-lg font-bold">Detalhamento de Atividades - Últimas 24h</h3> 
+            <button onclick="document.getElementById('modal-movimentacoes').style.display='none'" class="text-gray-500 hover:text-black"> 
+                <i data-lucide="x" class="w-6 h-6"></i> 
+            </button> 
+        </div> 
+        <!-- Modal Body -->
+        <div class="p-6">
+            <div style="max-height: 60vh; overflow-y: auto; overflow-x: auto; -webkit-overflow-scrolling: touch;" class="custom-scrollbar"> 
+                <div style="min-width: 600px;">
+                    {% include 'dashboard/partials/_movement_table.html' %} 
+                </div> 
+            </div>
+        </div>
+        <div class="p-4 bg-gray-100 text-right"> 
+            <button onclick="document.getElementById('modal-movimentacoes').style.display='none'" class="btn bg-gray-500 text-white">Fechar</button> 
+        </div> 
+    </div> 
 </div>
 {% endblock %}

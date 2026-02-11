@@ -7,6 +7,138 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [5.0.0] - 2026-02-10 - "Antigravity Workflows Foundation"
+
+> Workflows are now first-class: users can run guided, multi-skill playbooks instead of manually composing skills one by one.
+
+### Added
+
+- **New orchestration skill**: `antigravity-workflows`
+  - `skills/antigravity-workflows/SKILL.md`
+  - `skills/antigravity-workflows/resources/implementation-playbook.md`
+- **New workflow documentation**: `docs/WORKFLOWS.md`
+  - Introduces the Workflows model and differentiates it from Bundles.
+  - Provides execution playbooks with prerequisites, ordered steps, and prompt examples.
+- **New machine-readable workflow registry**: `data/workflows.json`
+  - `ship-saas-mvp`
+  - `security-audit-web-app`
+  - `build-ai-agent-system`
+  - `qa-browser-automation`
+
+### Changed
+
+- **README / Onboarding docs** updated to include Workflows discovery and usage:
+  - `README.md` (TOC + "Antigravity Workflows" section)
+  - `docs/GETTING_STARTED.md` (Bundles vs Workflows guidance)
+  - `docs/FAQ.md` (new Q&A: Bundles vs Workflows)
+- **Go browser automation alignment**:
+  - Workflow playbooks now include optional `@go-playwright` hooks for Go-based QA/E2E flows.
+- **Registry sync** after workflow skill addition:
+  - `CATALOG.md`
+  - `skills_index.json`
+  - `data/catalog.json`
+  - `data/bundles.json`
+
+### Contributors
+
+- [@sickn33](https://github.com/sickn33) - Workflows architecture, docs, and release integration
+
+---
+
+## [4.11.0] - 2026-02-08 - "Clean Code & Registry Stability"
+
+> Quality improvements: Clean Code principles and deterministic builds.
+
+### Changed
+
+- **`clean-code` skill** - Complete rewrite based on Robert C. Martin's "Clean Code":
+  - Systematic coverage: Meaningful names, functions, comments, formatting, objects, error handling, unit tests, and classes
+  - Added F.I.R.S.T. test principles and Law of Demeter guidance
+  - Fixed invalid heading format (`## ## When to Use` → `## When to Use`) that blocked validation
+  - Added implementation checklist and code smell detection
+- **Registry Stabilization** - Fixed `scripts/build-catalog.js` for deterministic CI builds:
+  - Uses `SOURCE_DATE_EPOCH` environment variable for reproducible timestamps
+  - Replaced `localeCompare` with explicit comparator for consistent sorting across environments
+  - Prevents CI validation failures caused by timestamp drift
+
+### Contributors
+
+- [@jackjin1997](https://github.com/jackjin1997) - Clean Code skill update and registry fixes (PR #69, forged at [ClawForge](https://github.com/jackjin1997/ClawForge))
+
+---
+
+## [4.10.0] - 2026-02-06 - "Composio Automation + .NET Backend"
+
+> A major expansion focused on practical app automation and stronger backend engineering coverage.
+
+### Added
+
+- **79 new skills total**.
+- **78 Composio/Rube automation skills** (PR #64), with operational playbooks for:
+- CRM and sales stacks (`HubSpot`, `Pipedrive`, `Salesforce`, `Zoho CRM`, `Close`).
+- Collaboration and project tools (`Notion`, `ClickUp`, `Asana`, `Jira`, `Confluence`, `Trello`, `Monday`).
+- Messaging and support channels (`Slack`, `Discord`, `Teams`, `Intercom`, `Freshdesk`, `Zendesk`).
+- Marketing and analytics systems (`Google Analytics`, `Mixpanel`, `PostHog`, `Segment`, `Mailchimp`, `Klaviyo`).
+- Infra/dev tooling (`GitHub`, `GitLab`, `CircleCI`, `Datadog`, `PagerDuty`, `Vercel`, `Render`).
+- **1 new `dotnet-backend` skill** (PR #65) with:
+- ASP.NET Core 8+ API patterns (Minimal APIs + controller-based).
+- EF Core usage guidance, JWT auth examples, and background worker templates.
+- Explicit trigger guidance and documented limitations.
+- **Registry size increased to 713 skills** (from 634).
+
+### Changed
+
+- Regenerated and synced discovery artifacts after merging both PRs:
+- `README.md` (counts + contributor updates)
+- `skills_index.json`
+- `CATALOG.md`
+- `data/catalog.json`
+- `data/bundles.json`
+- `data/aliases.json`
+- Release metadata updated for `v4.10.0`:
+- `package.json` / `package-lock.json` version bump
+- GitHub Release object published with release notes
+
+### Contributors
+
+- [@sohamganatra](https://github.com/sohamganatra) - 78 Composio automation skills (PR #64)
+- [@Nguyen-Van-Chan](https://github.com/Nguyen-Van-Chan) - .NET backend skill (PR #65)
+
+## [4.9.0] - 2026-02-05 - "OSS Hunter & Universal Skills"
+
+> Automated contribution hunting and universal CLI AI skills (Audio, YouTube, Prompt Engineering).
+
+### Added
+
+- **New Skill**: `oss-hunter` – Automated tool for finding high-impact Open Source contributions (Good First Issues, Help Wanted) in trending repositories.
+- **New Skill**: `audio-transcriber` – Transform audio recordings into professional Markdown with Whisper integration.
+- **New Skill**: `youtube-summarizer` – Generate comprehensive summaries/notes from YouTube videos.
+- **New Skill**: `prompt-engineer` (Enhanced) – Now includes 11 optimization frameworks (RTF, RISEN, etc.).
+- **Registry**: 634 skills (from 626). Catalog regenerated.
+
+### Changed
+
+- **CLI AI Skills**: Merged core skills from `ericgandrade/cli-ai-skills`.
+
+### Contributors
+
+- [@jackjin1997](https://github.com/jackjin1997) - OSS Hunter (PR #61)
+- [@ericgandrade](https://github.com/ericgandrade) - CLI AI Skills (PR #62)
+
+## [4.7.0] - 2026-02-03 - "Installer Fix & OpenCode Docs"
+
+> Critical installer fix for Windows and OpenCode documentation completion.
+
+### Fixed
+
+- **Installer**: Resolved `ReferenceError` for `tagArg` variable in `bin/install.js` ensuring correct execution on Windows/PowerShell (PR #53).
+
+### Documentation
+
+- **OpenCode**: Completed documentation for OpenCode integration in `README.md`.
+
+---
+
 ## [4.6.0] - 2026-02-01 - "SPDD & Radix UI Design System"
 
 > Agent workflow docs (SPDD) and Radix UI design system skill.

@@ -52,8 +52,8 @@ Use este módulo para enviar mercadorias de uma Unidade Central para Distribuido
 
 ### Criar Pedido
 1. Vá em **Pedidos > Novo Pedido**.
-2. Selecione o **Distribuidor** (Destino).
-3. Selecione a **Unidade de Origem** (de onde sai a mercadoria).
+2. Selecione a **Matriz de Origem** (Fornecedor).
+3. O **Destino** será automaticamente sua Unidade atual.
 4. Adicione produtos na lista.
 5. **Preço**: O sistema sugere o preço de tabela, mas você pode editar se houver negociação especial.
 6. Clique em **Salvar Rascunho**.

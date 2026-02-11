@@ -1,21 +1,21 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 
-{% block title %}Distribuidores - Própolis do Frei{% endblock %}
+{% block title %}Unidades - Própolis do Frei{% endblock %}
 
 {% block breadcrumbs %}
 <span style="color: #a3a3a3;">Cadastros / </span> <span
-    style="font-weight: 600; color: var(--primary);">Distribuidores</span>
+    style="font-weight: 600; color: var(--primary);">Unidades</span>
 {% endblock %}
 
 {% block content %}
 <div class="flex-col gap-6 animate-enter">
     <div class="flex justify-between items-center">
         <div>
-            <h1 style="font-size: 1.875rem; font-weight: 800; color: #4B3621;">Distribuidores</h1>
-            <p style="color: #78350F;">Gestão de distribuidores e parceiros.</p>
+            <h1 style="font-size: 1.875rem; font-weight: 800; color: #4B3621;">Unidades</h1>
+            <p style="color: #78350F;">Gestão de unidades e parceiros.</p>
         </div>
         <a href="{% url 'distributor_create' %}" class="btn btn-primary hover-lift hover-glow">
-            <i data-lucide="plus"></i> Novo Distribuidor
+            <i data-lucide="plus"></i> Nova Unidade
         </a>
     </div>
 
@@ -37,7 +37,7 @@
                         Cidade/UF</th>
                     <th
                         style="padding: 1rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
-                        Tipo</th>
+                        Tipo de Unidade</th>
                     <th
                         style="padding: 1rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
                         Status</th>
@@ -61,17 +61,16 @@
                     </td>
                     <td style="padding: 1rem; color: #666;">
                         {% if distributor.city or distributor.state %}
-                        {{ distributor.city|default:"" }}{% if distributor.city and distributor.state %} / {% endif %}{{
-                        distributor.state|default:"" }}
+                        {{ distributor.city|default:"" }}{% if distributor.city and distributor.state %} / {% endif %}{{ distributor.state|default:"" }}
                         {% else %}-{% endif %}
                     </td>
                     <td style="padding: 1rem;">
-                        {% if distributor.distributor_type == 'headquarters' %}
+                        {% if distributor.tipo_unidade == 'MATRIZ' %}
                         <span
-                            style="background: #DBEAFE; color: #1E40AF; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Matriz</span>
+                            style="background: #DBEAFE; color: #1E40AF; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">{{ distributor.get_tipo_unidade_display }}</span>
                         {% else %}
                         <span
-                            style="background: #F3F4F6; color: #4B5563; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Filial</span>
+                            style="background: #F3F4F6; color: #4B5563; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">{{ distributor.get_tipo_unidade_display }}</span>
                         {% endif %}
                     </td>
                     <td style="padding: 1rem;">

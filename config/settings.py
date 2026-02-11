@@ -35,10 +35,10 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_filters',
     'drf_spectacular',
+    'django_extensions',
     
     # Local apps
     'apps.authentication',
-    'apps.establishments',
     'apps.categories',
     'apps.products',
     'apps.distributors',
@@ -59,6 +59,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'apps.core.middleware.HtmxMiddleware',
+    'apps.core.middleware.DistributorSimulatorMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -74,6 +75,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'apps.core.context_processors.simulator_context',
             ],
         },
     },
@@ -186,6 +188,7 @@ SPECTACULAR_SETTINGS = {
 }
 
 # Redirects
+LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
 

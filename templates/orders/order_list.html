@@ -13,7 +13,7 @@
             <h1 style="font-size: 1.875rem; font-weight: 700;">Pedidos de Distribuição</h1>
             <p style="color: #666;">Controle o envio de produtos para distribuidores e parceiros.</p>
         </div>
-        <a href="{% url 'order_create' %}" class="btn btn-primary">
+        <a href="{% url 'order_create' %}" class="btn btn-primary" hx-boost="false">
             <i data-lucide="plus"></i> Novo Pedido
         </a>
     </div>
@@ -37,8 +37,8 @@
                     style="border-bottom: 1px solid var(--border); text-align: left; position: sticky; top: 0; background: white; z-index: 10;">
                     <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Nº Pedido</th>
                     <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Data</th>
-                    <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Distribuidor</th>
                     <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Unidade Origem</th>
+                    <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Destino (Filial)</th>
                     <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Total</th>
                     <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Status</th>
                     <th style="padding: 1rem; font-size: 0.875rem; color: #666; text-align: right;">Ações</th>
@@ -50,7 +50,7 @@
                     <td style="padding: 1rem; font-weight: 600; font-family: monospace;">{{ order.order_number }}</td>
                     <td style="padding: 1rem; font-size: 0.875rem;">{{ order.created_at|date:"d/m/Y" }}</td>
                     <td style="padding: 1rem;">{{ order.distributor.name }}</td>
-                    <td style="padding: 1rem; color: #666;">{{ order.establishment.name }}</td>
+                    <td style="padding: 1rem; color: #666;">{{ order.target_distributor.name }}</td>
                     <td style="padding: 1rem; font-weight: 600;">R$ {{ order.total_amount }}</td>
                     <td style="padding: 1rem;">
                         <span

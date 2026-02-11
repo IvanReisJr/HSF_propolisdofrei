@@ -15,17 +15,16 @@
             </a>
             <div>
                 <h1 style="font-size: 1.875rem; font-weight: 700;">{{ product.name }}</h1>
-                <p style="color: #666;">SKU: <span style="font-family: monospace; font-weight: 600;">{{ product.code
-                        }}</span> | Categoria: {{ product.category.name }}</p>
+                <p style="color: #666;">SKU: <span style="font-family: monospace; font-weight: 600;">{{ product.code }}</span> | Categoria: {{ product.category.name }}</p>
             </div>
         </div>
         <div class="flex gap-2">
             <a href="{% url 'product_edit' product.pk %}" class="btn btn-outline">
                 <i data-lucide="edit-2"></i> Editar
             </a>
-            <button class="btn btn-primary">
+            <a href="{% url 'ajustar_estoque' product.pk %}" class="btn btn-primary">
                 <i data-lucide="plus"></i> Ajustar Estoque
-            </button>
+            </a>
         </div>
     </div>
 
@@ -82,7 +81,7 @@
             </div>
         </div>
 
-        <!-- Stock Per Establishment Card -->
+        <!-- Stock Per Distributor Card -->
         <div class="card">
             <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1.5rem;">Estoque por Unidade</h3>
             <table style="width: 100%; border-collapse: collapse;">
@@ -97,11 +96,13 @@
                 <tbody>
                     {% for stock in stocks %}
                     <tr style="border-bottom: 1px solid var(--sidebar-accent);">
-                        <td style="padding: 1rem 0; font-weight: 600;">{{ stock.establishment.name }}</td>
-                        <td style="padding: 1rem 0; font-size: 0.875rem; color: #666;">{{ stock.establishment.city }},
-                            {{ stock.establishment.state }}</td>
-                        <td style="padding: 1rem 0; text-align: right; font-weight: 700; font-size: 1.125rem;">{{
-                            stock.current_stock }}</td>
+                        <td style="padding: 1rem 0; font-weight: 600;">{{ stock.distributor.name }}</td>
+                        <td style="padding: 1rem 0; font-size: 0.875rem; color: #666;">
+                            {{ stock.distributor.city|default:"-" }} / {{ stock.distributor.state|default:"-" }}
+                        </td>
+                        <td style="padding: 1rem 0; text-align: right; font-weight: 700; font-size: 1.125rem;">
+                            {{ stock.current_stock }}
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>

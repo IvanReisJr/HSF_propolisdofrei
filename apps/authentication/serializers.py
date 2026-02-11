@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from .models import User, UserRole, AppRole
-from apps.establishments.models import Establishment
 
 class UserRoleSerializer(serializers.ModelSerializer):
     role_display = serializers.CharField(source='get_role_display', read_only=True)
@@ -11,7 +10,6 @@ class UserRoleSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     roles = UserRoleSerializer(many=True, read_only=True)
-    establishment_name = serializers.CharField(source='establishment.name', read_only=True)
     full_name = serializers.CharField(read_only=True)
 
     class Meta:

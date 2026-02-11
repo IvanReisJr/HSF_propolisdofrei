@@ -8,7 +8,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('distributors', '0003_distributor_tipo_unidade_and_more'),
-        ('establishments', '0001_initial'),
         ('orders', '0001_initial'),
     ]
 
@@ -22,10 +21,5 @@ class Migration(migrations.Migration):
             model_name='order',
             name='distributor',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='sales_orders', to='distributors.distributor', verbose_name='CD de Origem (Matriz)'),
-        ),
-        migrations.AlterField(
-            model_name='order',
-            name='establishment',
-            field=models.ForeignKey(blank=True, help_text='Campo legado. Use target_distributor.', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='orders', to='establishments.establishment', verbose_name='Estabelecimento (Legado)'),
         ),
     ]

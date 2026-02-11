@@ -3,11 +3,11 @@ from .models import Product, ProductStock
 from apps.categories.serializers import CategorySerializer
 
 class ProductStockSerializer(serializers.ModelSerializer):
-    establishment_name = serializers.CharField(source='establishment.name', read_only=True)
+    distributor_name = serializers.CharField(source='distributor.name', read_only=True)
 
     class Meta:
         model = ProductStock
-        fields = ['id', 'establishment', 'establishment_name', 'current_stock', 'updated_at']
+        fields = ['id', 'distributor', 'distributor_name', 'current_stock', 'updated_at']
 
 class ProductSerializer(serializers.ModelSerializer):
     category_detail = CategorySerializer(source='category', read_only=True)

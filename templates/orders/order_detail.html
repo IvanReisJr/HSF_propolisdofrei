@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 
 {% block title %}Pedido {{ order.order_number }} - Própolis do Frei{% endblock %}
 
@@ -15,9 +15,7 @@
             </a>
             <div>
                 <h1 style="font-size: 1.875rem; font-weight: 700;">Pedido {{ order.order_number }}</h1>
-                <p style="color: #666;">Status: <span
-                        style="font-weight: 700; color: {% if order.status   ==   'pendente' %}#92400e{% elif order.status   ==   'confirmado' %}#166534{% else %}#b91c1c{% endif %};">{{
-                        order.get_status_display }}</span></p>
+                <p style="color: #666;">Status: <span style="font-weight: 700; color: {% if order.status == 'pendente' %}#92400e{% elif order.status == 'confirmado' %}#166534{% else %}#b91c1c{% endif %};">{{ order.get_status_display }}</span></p>
             </div>
         </div>
 
@@ -29,6 +27,22 @@
                     <i data-lucide="x-circle"></i> Cancelar Pedido
                 </button>
             </form>
+            
+            {% if request.user.distributor.tipo_unidade == 'MATRIZ' or request.user.is_super_user_role %}
+            <form action="{% url 'order_authorize' order.pk %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">
+                    <i data-lucide="check-circle"></i> Autorizar Pedido (Matriz)
+                </button>
+            </form>
+            {% else %}
+            <button type="button" class="btn btn-outline" disabled style="color: #9ca3af; border-color: #e5e7eb; cursor: not-allowed;" title="Aguardando autorização da Matriz">
+                <i data-lucide="clock"></i> Aguardando Autorização
+            </button>
+            {% endif %}
+            {% endif %}
+
+            {% if order.status == 'autorizado' %}
             <form action="{% url 'order_confirm' order.pk %}" method="post">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-primary">
@@ -69,26 +83,23 @@
                                 <span style="font-size: 0.75rem; color: #a3a3a3;">Código: {{ item.product.code }}</span>
                             </div>
                         </td>
-                        <td style="padding: 1rem 0; text-align: center;">{{ item.quantity }} {{ item.product.unit }}
+                        <td style="padding: 1rem 0; text-align: center;">{{ item.quantity }} un
                         </td>
-                        <td style="padding: 1rem 0; text-align: right;">R$ {{ item.unit_price }}</td>
-                        <td style="padding: 1rem 0; text-align: right; font-weight: 600;">R$ {{ item.total_price }}</td>
+                        <td style="padding: 1rem 0; text-align: right;">R$ {{ item.unit_price|floatformat:2 }}</td>
+                        <td style="padding: 1rem 0; text-align: right; font-weight: 600;">R$ {{ item.total_price|floatformat:2 }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
                 <tfoot>
                     <tr>
                         <td colspan="3" style="padding: 1.5rem 0 0.5rem; text-align: right; color: #666;">Subtotal</td>
-                        <td style="padding: 1.5rem 0 0.5rem; text-align: right; font-weight: 600;">R$ {{
-                            order.total_amount }}</td>
+                        <td style="padding: 1.5rem 0 0.5rem; text-align: right; font-weight: 600;">R$ {{ order.total_amount|floatformat:2 }}</td>
                     </tr>
                     <tr>
                         <td colspan="3"
                             style="padding: 0.5rem 0; text-align: right; font-size: 1.125rem; font-weight: 700;">Total
                             Geral</td>
-                        <td
-                            style="padding: 0.5rem 0; text-align: right; font-size: 1.125rem; font-weight: 700; color: var(--primary);">
-                            R$ {{ order.total_amount }}</td>
+                        <td style="padding: 0.5rem 0; text-align: right; font-size: 1.125rem; font-weight: 700; color: var(--primary);">R$ {{ order.total_amount|floatformat:2 }}</td>
                     </tr>
                 </tfoot>
             </table>
@@ -98,10 +109,9 @@
             <div class="card flex-col gap-4">
                 <h3 style="font-size: 1.125rem; font-weight: 600;">Destinatário</h3>
                 <div class="flex-col gap-2">
-                    <p style="font-weight: 600;">{{ order.distributor.name }}</p>
-                    <p style="font-size: 0.875rem; color: #666;">{{ order.distributor.city }}, {{
-                        order.distributor.state }}</p>
-                    <p style="font-size: 0.875rem; color: #666;">{{ order.distributor.email }}</p>
+                    <p style="font-weight: 600;">{{ order.target_distributor.name }}</p>
+                    <p style="font-size: 0.875rem; color: #666;">{{ order.target_distributor.city }}, {{ order.target_distributor.state }}</p>
+                    <p style="font-size: 0.875rem; color: #666;">{{ order.target_distributor.email }}</p>
                 </div>
             </div>
 
@@ -109,7 +119,10 @@
                 <h3 style="font-size: 1.125rem; font-weight: 600;">Informações de Envio</h3>
                 <div class="flex justify-between">
                     <span style="color: #666; font-size: 0.875rem;">Saído de:</span>
-                    <span style="font-weight: 600; font-size: 0.875rem;">{{ order.establishment.name }}</span>
+                    <div class="flex-col">
+                        <span style="font-weight: 600; font-size: 0.875rem;">{{ order.distributor.name }}</span>
+                        <span style="font-size: 0.75rem; color: #666;">{{ order.distributor.city }} - {{ order.distributor.state }}</span>
+                    </div>
                 </div>
                 <div class="flex justify-between">
                     <span style="color: #666; font-size: 0.875rem;">Criado em:</span>

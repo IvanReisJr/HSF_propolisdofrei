@@ -11,7 +11,6 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('establishments', '0001_initial'),
         ('products', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
@@ -29,7 +28,6 @@ class Migration(migrations.Migration):
                 ('reference_id', models.UUIDField(blank=True, help_text='ID do pedido ou outra referência', null=True, verbose_name='ID de Referência')),
                 ('reference_type', models.CharField(blank=True, help_text='order, transfer, adjustment, etc.', max_length=50, null=True, verbose_name='Tipo de Referência')),
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Criado em')),
-                ('establishment', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='stock_movements', to='establishments.establishment', verbose_name='Estabelecimento')),
                 ('product', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='stock_movements', to='products.product', verbose_name='Produto')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='stock_movements', to=settings.AUTH_USER_MODEL, verbose_name='Usuário')),
             ],

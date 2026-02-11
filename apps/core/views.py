@@ -1,10 +1,12 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.core.exceptions import PermissionDenied
 from .models import UnitOfMeasure
 from .decorators import matriz_required
 
 @login_required
+@matriz_required
 def unit_list(request):
     units = UnitOfMeasure.objects.filter(is_active=True)
     return render(request, 'core/unit_list.html', {'units': units})
@@ -26,6 +28,7 @@ def unit_create(request):
     return render(request, 'core/unit_form.html')
 
 @login_required
+@matriz_required
 def unit_edit(request, pk):
     unit = get_object_or_404(UnitOfMeasure, pk=pk)
     
@@ -46,6 +49,7 @@ def unit_edit(request, pk):
     return render(request, 'core/unit_form.html', {'unit': unit})
 
 @login_required
+@matriz_required
 def inativar_unidade(request, pk):
     if not request.user.is_staff:
         messages.error(request, 'Apenas a equipe da Matriz pode inativar unidades.')
@@ -56,3 +60,23 @@ def inativar_unidade(request, pk):
     unit.save()
     messages.success(request, 'Unidade inativada com sucesso!')
     return redirect('unit_list')
+
+@login_required
+def switch_distributor(request):
+    """
+    Alterna a visão do distribuidor para superusuários (simulação).
+    """
+    if not request.user.is_superuser:
+        raise PermissionDenied
+    
+    if request.method == 'POST':
+        dist_id = request.POST.get('distributor_id')
+        if dist_id:
+            request.session['simulated_distributor_id'] = dist_id
+            messages.info(request, f'Visão simulada ativada.')
+        else:
+            if 'simulated_distributor_id' in request.session:
+                del request.session['simulated_distributor_id']
+            messages.info(request, 'Visão simulada desativada (Visão Global/Admin).')
+            
+    return redirect(request.META.get('HTTP_REFERER', 'dashboard'))

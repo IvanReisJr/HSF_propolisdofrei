@@ -1,5 +1,7 @@
 from django.urls import path
+from . import views
 
 urlpatterns = [
-    # Rotas de relatórios serão adicionadas aqui
+    path('inventory/', views.inventory_report, name='inventory_report'),
+    path('inventory/pdf/', views.inventory_pdf, name='inventory_pdf'),
 ]

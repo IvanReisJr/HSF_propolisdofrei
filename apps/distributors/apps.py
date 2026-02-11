@@ -4,4 +4,4 @@ from django.apps import AppConfig
 class DistributorsConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'apps.distributors'
-    verbose_name = 'Distribuidores'
+    verbose_name = 'Unidades'

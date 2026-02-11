@@ -150,12 +150,12 @@ def run_simulation():
     # Pedido Válido
     print("   ...criando pedido válido (50un)...")
     
-    from apps.establishments.models import Establishment
-    est_filial, _ = Establishment.objects.get_or_create(name="Loja Filial B", defaults={'code':'LOJA-B'})
+    # Updated for Legacy Cleanup (Establishment -> Distributor)
+    # Using 'filial' (Distributor) created in Phase 0
 
     order = Order.objects.create(
-        establishment=est_filial, # Required by model
-        distributor=matriz,       # Order Target (Supplier)
+        target_distributor=filial, # Filial de Destino
+        distributor=matriz,       # CD de Origem (Matriz)
         user=user_filial,
         status='pendente',
         total_amount=50 * prod_ativo.sale_price

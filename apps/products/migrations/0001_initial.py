@@ -12,7 +12,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('categories', '0001_initial'),
-        ('establishments', '0001_initial'),
     ]
 
     operations = [
@@ -45,14 +44,12 @@ class Migration(migrations.Migration):
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('current_stock', models.IntegerField(default=0, verbose_name='Estoque Atual')),
                 ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Atualizado em')),
-                ('establishment', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='product_stocks', to='establishments.establishment', verbose_name='Estabelecimento')),
                 ('product', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='stocks', to='products.product', verbose_name='Produto')),
             ],
             options={
                 'verbose_name': 'Estoque de Produto',
                 'verbose_name_plural': 'Estoques de Produtos',
                 'db_table': 'product_stocks',
-                'unique_together': {('product', 'establishment')},
             },
         ),
     ]

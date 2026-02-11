@@ -1,9 +1,11 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from apps.core.decorators import matriz_required
 from .models import Category
 
 @login_required
+@matriz_required
 def category_list(request):
     categories = Category.objects.all()
     return render(request, 'categories/category_list.html', {'categories': categories})
@@ -26,6 +28,7 @@ def category_create(request):
     return render(request, 'categories/category_form.html')
 
 @login_required
+@matriz_required
 def category_edit(request, pk):
     category = get_object_or_404(Category, pk=pk)
     
@@ -44,6 +47,7 @@ def category_edit(request, pk):
     return render(request, 'categories/category_form.html', {'category': category})
 
 @login_required
+@matriz_required
 def inativar_categoria(request, pk):
     category = get_object_or_404(Category, pk=pk)
     category.is_active = False

@@ -20,14 +20,11 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="flex-col gap-2">
                     <label for="code" class="label">Código</label>
-                    {% if distributor %}
-                    <input type="text" name="code" id="code" class="input" value="{{ distributor.code }}" required>
-                    {% else %}
-                    <input type="text" value="{{ next_code }}" class="input" disabled
+                    <input type="text" class="input" value="{% if distributor %}{{ distributor.code }}{% else %}{{ next_code }}{% endif %}" disabled
                         style="background: #f3f4f6; color: #666;">
-                    <input type="hidden" name="code" value="{{ next_code }}">
-                    <p style="font-size: 0.75rem; color: #666; margin-top: 0.25rem;">Código gerado automaticamente</p>
-                    {% endif %}
+                    <p style="font-size: 0.75rem; color: #666; margin-top: 0.25rem;">
+                        {% if distributor %}Código fixo{% else %}Será gerado automaticamente{% endif %}
+                    </p>
                 </div>
 
                 <div class="flex-col gap-2">
@@ -94,7 +91,7 @@
                     <label for="state" class="label">Estado (UF)</label>
                     <select name="state" class="input" required>
                         <option value="">Selecione...</option>
-                        {% for code, name in BRAZIL_STATES %}
+                        {% for code, name in states %}
                             <option value="{{ code }}" {% if distributor.state == code %}selected{% endif %}>{{ name }} ({{ code }})</option>
                         {% endfor %}
                     </select>

@@ -19,7 +19,133 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 
-    {% block extra_head %}{% endblock %}
+    {% block extra_head %}
+    <style>
+        @keyframes pulse-blue {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 0.5;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .pulse-container {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pulse-blue {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #3b82f6; /* blue-500 */
+            border-radius: 9999px;
+            animation: pulse-blue 2s infinite;
+            z-index: -1;
+        }
+
+        .card-movimentacoes {
+            cursor: pointer;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 9998; /* Abaixo do modal */
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            display: none; /* Começa oculto */
+        }
+
+        .modal-backdrop.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .modal-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            z-index: 9999;
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            width: 90%;
+            max-width: 48rem;
+            max-height: 90vh;
+            display: none; /* Começa oculto */
+            opacity: 0;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-container.active {
+            display: flex;
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .modal-body {
+            overflow-y: auto;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+
+        .skeleton-loader {
+            animation: shimmer 2s infinite linear;
+            background: linear-gradient(to right, #f0f0f0 8%, #e0e0e0 18%, #f0f0f0 33%);
+            background-size: 2000px 100%;
+            border-radius: 4px;
+        }
+
+        .sidebar-fixo {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            /* Ajuste de scroll fino para o menu se houver muitos itens */
+        }
+        .sidebar-fixo::-webkit-scrollbar { width: 4px; }
+        .sidebar-fixo::-webkit-scrollbar-thumb { background: #4B3621; }
+
+        .nav-link, .nav-sublink {
+            font-size: 0.85rem !important; /* Diminui levemente a fonte */
+            white-space: nowrap !important; /* Impede que o texto pule para a linha de baixo */
+            overflow: hidden;
+            text-overflow: ellipsis; /* Caso o nome seja muito longo, ele coloca "..." no final em vez de quebrar */
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+            gap: 0.5rem !important; /* Diminui o espaço entre o ícone e o texto */
+        }
+
+        .nav-link.active, .nav-sublink.active {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        @media (max-height: 768px) {
+            .nav-link, .nav-sublink {
+                padding-top: 0.35rem !important;
+                padding-bottom: 0.35rem !important;
+            }
+            .nav-section-toggle {
+                padding-top: 0.5rem !important;
+                padding-bottom: 0.5rem !important;
+            }
+        }
+    </style>
+    {% endblock %}
     <style>
         /* HTMX Progress Bar */
         .htmx-indicator {
@@ -50,11 +176,12 @@
 </head>
 
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    {% include "includes/debug_toolbar.html" %}
     <div id="progress-bar"></div>
     <div class="app-container">
         {% if user.is_authenticated %}
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar sidebar-fixo">
             <div class="sidebar-header" style="padding: 1.5rem 1rem; justify-content: center;">
                 <img src="{% static 'img/DoFrei.png' %}" alt="Própolis do Frei" class="sidebar-logo">
             </div>
@@ -63,13 +190,13 @@
                     <i data-lucide="layout-dashboard"></i> Dashboard
                 </a>
 
-                {% if user.is_superuser or user.unidade.tipo_unidade == 'MATRIZ' %}
+                {% if user.is_superuser or user.distributor.tipo_unidade == 'MATRIZ' %}
                 <!-- Cadastros Collapsible Section -->
                 <div class="nav-section" style="margin-top: 0.5rem;">
                     <button class="nav-section-toggle" onclick="toggleSection('cadastros')"
                         style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: 2px; color: #F3E5AB; font-weight: 600; background: none; border: none; width: 100%; cursor: pointer; font-size: 0.875rem; transition: all 0.2s;">
                         <i data-lucide="folder-open"></i>
-                        <span>Cadastros</span>
+                        <span>Gestão / Cadastros</span>
                         <i data-lucide="chevron-down" class="chevron" id="cadastros-chevron"
                             style="margin-left: auto; transition: transform 0.3s ease; width: 16px; height: 16px;"></i>
                     </button>
@@ -95,15 +222,10 @@
                             style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem; border-radius: 2px; color: #A3A3A3; font-weight: 500; font-size: 0.8125rem; transition: all 0.2s; margin-top: 0.25rem;">
                             <i data-lucide="scale" style="width: 16px; height: 16px;"></i> Unidades de Medida
                         </a>
-                        <a href="/distributors/"
+                        <a href="{% url 'distributor_list' %}"
                             class="nav-sublink {% if 'distributors' in request.path %}active{% endif %}"
                             style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem; border-radius: 2px; color: #A3A3A3; font-weight: 500; font-size: 0.8125rem; transition: all 0.2s; margin-top: 0.25rem;">
-                            <i data-lucide="users" style="width: 16px; height: 16px;"></i> Distribuidores
-                        </a>
-                        <a href="/establishments/"
-                            class="nav-sublink {% if 'establishments' in request.path %}active{% endif %}"
-                            style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem; border-radius: 2px; color: #A3A3A3; font-weight: 500; font-size: 0.8125rem; transition: all 0.2s; margin-top: 0.25rem;">
-                            <i data-lucide="building-2" style="width: 16px; height: 16px;"></i> Unidades / Filiais
+                            <i data-lucide="building-2" style="width: 16px; height: 16px;"></i> Gestão de Unidades
                         </a>
                     </div>
                 </div>
@@ -112,14 +234,17 @@
                 <div
                     style="font-size: 0.75rem; font-weight: 700; color: #78350F; margin-top: 1rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; padding-left: 0.75rem;">
                     Operação</div>
-                <a href="/stock/movements/" class="nav-link {% if 'stock' in request.path %}active{% endif %}">
+                <a href="/stock/movements/" class="nav-link {% if 'stock' in request.path and 'movements' in request.path %}active{% endif %}">
                     <i data-lucide="arrow-left-right"></i> Estoque
+                </a>
+                <a href="{% url 'inventory_report' %}" class="nav-link {% if 'reports/inventory' in request.path %}active{% endif %}">
+                    <i data-lucide="clipboard-list"></i> Rel. de Inventário
                 </a>
                 <a href="/orders/" class="nav-link {% if 'orders' in request.path %}active{% endif %}">
                     <i data-lucide="shopping-cart"></i> Pedidos
                 </a>
 
-                {% if user.is_staff %}
+                {% if user.is_superuser or user.distributor.tipo_unidade == 'MATRIZ' %}
                 <div
                     style="margin-top: 2rem; padding: 0 0.75rem; font-size: 0.75rem; font-weight: 700; color: #a3a3a3;">
                     ADMINISTRAÇÃO</div>

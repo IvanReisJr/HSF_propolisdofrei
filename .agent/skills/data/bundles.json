@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-02T18:58:37.318Z",
+  "generatedAt": "2026-02-08T00:00:00.000Z",
   "bundles": {
     "core-dev": {
       "description": "Core development skills across languages, frameworks, and backend/frontend fundamentals.",
@@ -38,6 +38,7 @@
         "documentation-generation-doc-generate",
         "documentation-templates",
         "dotnet-architect",
+        "dotnet-backend",
         "dotnet-backend-patterns",
         "exa-search",
         "fastapi-pro",
@@ -55,7 +56,9 @@
         "frontend-mobile-security-xss-scan",
         "frontend-security-coder",
         "frontend-slides",
+        "game-development/mobile-games",
         "go-concurrency-patterns",
+        "go-playwright",
         "golang-pro",
         "graphql",
         "hubspot-integration",
@@ -111,6 +114,7 @@
         "shodan-reconnaissance",
         "shopify-apps",
         "shopify-development",
+        "slack-automation",
         "slack-bot-builder",
         "stitch-ui-design",
         "swiftui-expert-skill",
@@ -140,6 +144,7 @@
       "description": "Security, privacy, and compliance essentials.",
       "skills": [
         "accessibility-compliance-accessibility-audit",
+        "antigravity-workflows",
         "api-fuzzing-bug-bounty",
         "api-security-best-practices",
         "attack-tree-construction",
@@ -163,6 +168,7 @@
         "deployment-pipeline-design",
         "design-orchestration",
         "docker-expert",
+        "dotnet-backend",
         "ethical-hacking-methodology",
         "find-bugs",
         "firebase",
@@ -235,6 +241,7 @@
       "skills": [
         "backend-architect",
         "devops-troubleshooter",
+        "freshservice-automation",
         "gitops-workflow",
         "helm-chart-scaffolding",
         "istio-traffic-management",
@@ -258,6 +265,7 @@
       "skills": [
         "airflow-dag-patterns",
         "analytics-tracking",
+        "angular-ui-patterns",
         "blockrun",
         "business-analyst",
         "cc-skill-backend-patterns",
@@ -283,6 +291,8 @@
         "fp-ts-react",
         "frontend-dev-guidelines",
         "gdpr-data-handling",
+        "google-analytics-automation",
+        "googlesheets-automation",
         "graphql",
         "hugging-face-jobs",
         "hybrid-cloud-networking",
@@ -291,6 +301,7 @@
         "kpi-dashboard-design",
         "legal-advisor",
         "loki-mode",
+        "mailchimp-automation",
         "ml-pipeline-workflow",
         "moodle-external-api-development",
         "neon-postgres",
@@ -309,6 +320,7 @@
         "scala-pro",
         "schema-markup",
         "segment-cdp",
+        "sendgrid-automation",
         "senior-architect",
         "seo-audit",
         "spark-optimization",
@@ -316,11 +328,12 @@
         "sql-optimization-patterns",
         "sql-pro",
         "sqlmap-database-pentesting",
+        "supabase-automation",
         "unity-ecs-patterns",
         "using-neon",
         "vector-database-engineer",
-        "xlsx",
-        "xlsx-official"
+        "xlsx-official",
+        "youtube-automation"
       ]
     },
     "ops-core": {
@@ -357,6 +370,7 @@
         "error-diagnostics-error-trace",
         "expo-deployment",
         "flutter-expert",
+        "game-development/game-art",
         "git-pr-workflows-git-workflow",
         "gitlab-ci-patterns",
         "gitops-workflow",
@@ -382,8 +396,10 @@
         "observability-monitoring-slo-implement",
         "performance-engineer",
         "performance-testing-review-ai-review",
+        "pipedrive-automation",
         "postmortem-writing",
         "prometheus-configuration",
+        "readme",
         "risk-metrics-calculation",
         "security-auditor",
         "server-management",
