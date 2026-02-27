@@ -1,0 +1,121 @@
+{% extends base_template|default:'base_full.html' %}
+{% load static %}
+{% load humanize %}
+{% block title %}Fechamento de Caixa | Sistema do Frei{% endblock %}
+{% block content %}
+<div id="closure-report-main" class="container-fluid p-4">
+    <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Fechamento de Caixa</h1>
+            <p class="text-gray-500">Relatório financeiro da Matriz (v4.0 Final)</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="{% url 'export_closure_pdf' %}?date={{ selected_date|date:'Y-m-d' }}" target="_blank" class="btn bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 btn-sm flex items-center gap-1">
+                <i data-lucide="download" class="w-4 h-4"></i> Exportar PDF
+            </a>
+            <form hx-get="{% url 'financial_closure_report' %}" hx-target="#closure-report-main" hx-swap="outerHTML" hx-push-url="true" method="GET" class="flex items-center gap-2 bg-white p-2 rounded-lg shadow-sm border border-gray-200">
+                <label for="date" class="text-sm font-medium text-gray-700">Data:</label>
+                <input type="date" name="date" id="date" value="{{ selected_date|date:'Y-m-d' }}" class="border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 sm:text-sm">
+                <button type="submit" class="btn bg-amber-600 text-white hover:bg-amber-700 btn-sm" title="Filtrar"><i data-lucide="filter" class="w-4 h-4"></i></button>
+                <a href="{% url 'financial_closure_report' %}" class="btn bg-gray-200 text-gray-600 hover:bg-gray-300 btn-sm" hx-get="{% url 'financial_closure_report' %}" hx-target="#closure-report-main" hx-swap="outerHTML" hx-push-url="true" title="Limpar Filtros (Hoje)"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></a>
+            </form>
+        </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-700">Total Recebido ({{ selected_date|date:"d/m" }})</h3>
+                <div class="p-2 bg-green-100 rounded-full"><i data-lucide="arrow-down-circle" class="w-6 h-6 text-green-600"></i></div>
+            </div>
+            <p class="text-3xl font-bold text-green-600 currency-brl">{{ total_received|floatformat:2 }}</p>
+            <p class="text-sm text-gray-500 mt-2">Pagamentos validados nesta data</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-amber-500">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-700">Total Pendente (Global)</h3>
+                <div class="p-2 bg-amber-100 rounded-full"><i data-lucide="clock" class="w-6 h-6 text-amber-600"></i></div>
+            </div>
+            <p class="text-3xl font-bold text-amber-600 currency-brl">{{ total_pending_global|floatformat:2 }}</p>
+            <p class="text-sm text-gray-500 mt-2">Valor total a receber de todas as filiais</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-700">Movimentações</h3>
+                <div class="p-2 bg-blue-100 rounded-full"><i data-lucide="activity" class="w-6 h-6 text-blue-600"></i></div>
+            </div>
+            <p class="text-3xl font-bold text-blue-600">{{ settlements.count }}</p>
+        </div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200"><h3 class="text-lg font-semibold text-gray-800">Recebimento por Condição</h3></div>
+            <div class="p-6">
+                {% if received_by_condition %}
+                <div class="space-y-4">
+                    {% for item in received_by_condition %}
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span class="font-medium text-gray-700">{{ item.order__payment_condition|title }}</span>
+                        <span class="font-bold text-gray-800 currency-brl">{{ item.total|floatformat:2 }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200"><h3 class="text-lg font-semibold text-gray-800">Recebimento por Filial</h3></div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <tbody class="divide-y divide-gray-100">
+                        {% for item in received_by_branch %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-3 font-medium text-gray-800">{{ item.order__target_distributor__name }}</td>
+                            <td class="px-6 py-3 text-right font-bold text-green-600 currency-brl">{{ item.total|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="mt-8 bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Detalhamento de Pagamentos ({{ selected_date|date:"d/m/Y" }})</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-gray-100">
+                    <tr><th>Hora</th><th>Filial</th><th>Pedido</th><th>Condição</th><th>Validado Por</th><th>Valor</th></tr>
+                </thead>
+                <tbody>
+                    {% for settlement in settlements %}
+                    <tr>
+                        <td class="px-6 py-3">{{ settlement.created_at|date:"H:i" }}</td>
+                        <td class="px-6 py-3">{{ settlement.order.target_distributor.name }}</td>
+                        <td class="px-6 py-3">{{ settlement.order.order_number }}</td>
+                        <td class="px-6 py-3">{{ settlement.order.get_payment_condition_display }}</td>
+                        <td class="px-6 py-3">{{ settlement.validated_by.get_full_name|default:settlement.validated_by.username }}</td>
+                        <td class="px-6 py-3 font-bold text-green-600 currency-brl">{{ settlement.value_reported|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script>
+    (function () {
+        function formatBRL() {
+            document.querySelectorAll('.currency-brl').forEach(el => {
+                let v = el.innerText.trim();
+                if (v.includes('R$')) return;
+                let n = parseFloat(v.replace(/[^\d.,-]/g, '').replace(',', '.'));
+                if (!isNaN(n)) el.innerText = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n);
+            });
+        }
+        formatBRL();
+        document.addEventListener('htmx:afterSwap', formatBRL);
+        setTimeout(formatBRL, 300);
+    })();
+</script>
+{% endblock %}

@@ -5,3 +5,6 @@ class StockConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'apps.stock'
     verbose_name = 'Estoque'
+
+    def ready(self):
+        import apps.stock.signals  # noqa: F401

@@ -95,7 +95,7 @@ def movement_create(request):
                     new_stock=stock.current_stock,
                     batch=stock.batch,
                     expiration_date=stock.expiration_date,
-                    reason=reason or dict(StockMovementType.choices).get(movement_type, movement_type)
+                    reason=reason or str(dict(StockMovementType.choices).get(movement_type, movement_type))
                 )
             
             messages.success(request, 'Movimentação realizada com sucesso.')
@@ -128,7 +128,7 @@ def movement_create(request):
                 new_stock=stock.current_stock,
                 batch=batch,
                 expiration_date=stock.expiration_date,
-                reason=reason or dict(StockMovementType.choices).get(movement_type, movement_type)
+                reason=reason or str(dict(StockMovementType.choices).get(movement_type, movement_type))
             )
             messages.success(request, 'Movimentação realizada com sucesso.')
              
@@ -139,7 +139,21 @@ def movement_create(request):
         return redirect('movement_list')
 
     products = Product.objects.filter(is_active=True)
-    distributors = Distributor.objects.filter(is_active=True)
+    
+    # Filter distributors based on user context (Strict: prioritize assigned unit)
+    user_distributor = getattr(request.user, 'distributor', None)
+    
+    if user_distributor:
+        if user_distributor.tipo_unidade == 'MATRIZ':
+            distributors = Distributor.objects.filter(is_active=True, tipo_unidade='MATRIZ')
+        else:
+            distributors = Distributor.objects.filter(id=user_distributor.id)
+    elif request.user.is_superuser:
+        # Superusers without assigned unit see everything
+        distributors = Distributor.objects.filter(is_active=True)
+    else:
+        distributors = Distributor.objects.none()
+        
     return render(request, 'stock/movement_form.html', {'products': products, 'distributors': distributors})
 
 @login_required

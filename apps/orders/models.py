@@ -5,6 +5,7 @@ from django.utils import timezone
 from decimal import Decimal
 from apps.core.models import Sequence  # Import Sequence
 from django.utils.text import slugify
+from apps.products.models import ActiveManager
 
 
 class OrderStatus(models.TextChoices):
@@ -86,8 +87,12 @@ class Order(models.Model):
         default=Decimal('0.00')
     )
     notes = models.TextField(_('Observações'), blank=True, null=True)
+    is_active = models.BooleanField(_('Ativo (Soft Delete)'), default=True)
     created_at = models.DateTimeField(_('Criado em'), auto_now_add=True)
     updated_at = models.DateTimeField(_('Atualizado em'), auto_now=True)
+    
+    objects = ActiveManager()
+    all_objects = models.Manager()
 
     class Meta:
         db_table = 'orders'
@@ -97,6 +102,11 @@ class Order(models.Model):
 
     def __str__(self):
         return f"{self.order_number} - {self.distributor.name if self.distributor else 'N/A'}"
+        
+    def delete(self, using=None, keep_parents=False):
+        """Soft delete: apenas marca como inativo"""
+        self.is_active = False
+        self.save()
         
     @property
     def total_submitted(self):
@@ -151,7 +161,11 @@ class OrderItem(models.Model):
     quantity = models.IntegerField(_('Quantidade'))
     unit_price = models.DecimalField(_('Preço Unitário'), max_digits=10, decimal_places=2)
     total_price = models.DecimalField(_('Preço Total'), max_digits=10, decimal_places=2)
+    is_active = models.BooleanField(_('Ativo (Soft Delete)'), default=True)
     created_at = models.DateTimeField(_('Criado em'), auto_now_add=True)
+
+    objects = ActiveManager()
+    all_objects = models.Manager()
 
     class Meta:
         db_table = 'order_items'
@@ -160,6 +174,11 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.product.name} - {self.quantity}"
+
+    def delete(self, using=None, keep_parents=False):
+        """Soft delete: apenas marca como inativo"""
+        self.is_active = False
+        self.save()
 
     def save(self, *args, **kwargs):
         """Calcula o total_price automaticamente"""

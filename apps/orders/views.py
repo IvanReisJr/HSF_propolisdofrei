@@ -203,11 +203,21 @@ def order_confirm(request, pk):
                 if not source_distributor:
                      raise Exception("Pedido sem Distribuidor de Origem vinculado.")
 
-                stocks = ProductStock.objects.filter(
-                    product=product, 
-                    distributor=source_distributor,
-                    current_stock__gt=0
-                ).order_by('expiration_date', 'updated_at') # First expiring first
+                # POOL DE ESTOQUE: Se a origem for MATRIZ, busca em TODAS as MATRIZes.
+                # CD Humanitas e CD Sede Adm compartilham o mesmo estoque físico.
+                if source_distributor.tipo_unidade == 'MATRIZ':
+                    all_matriz = Distributor.objects.filter(tipo_unidade='MATRIZ', is_active=True)
+                    stocks = ProductStock.objects.filter(
+                        product=product,
+                        distributor__in=all_matriz,
+                        current_stock__gt=0
+                    ).order_by('expiration_date', 'updated_at')
+                else:
+                    stocks = ProductStock.objects.filter(
+                        product=product,
+                        distributor=source_distributor,
+                        current_stock__gt=0
+                    ).order_by('expiration_date', 'updated_at')
                 
                 total_available = sum(s.current_stock for s in stocks)
                 
@@ -412,6 +422,7 @@ from xhtml2pdf import pisa
 from django.http import HttpResponse
 
 @login_required
+# Relatórios de Fechamento (Reloading...)
 def financial_closure_report(request):
     """
     Relatório de Fechamento de Caixa (Matriz).
@@ -486,7 +497,7 @@ def financial_closure_report(request):
             'base_template': base_template,
         }
         
-        return render(request, 'orders/closure_report.html', context)
+        return render(request, 'orders/closure_report_final.html', context)
     except Exception as e:
         logger.error(f"Erro no relatório de fechamento: {str(e)}")
         traceback.print_exc()
@@ -589,14 +600,24 @@ def approve_settlement(request, pk):
                 # Se o pagamento quitar o pedido, verificar estoque da Matriz ANTES de validar
                 if current_pending <= 0:
                     # Verificar se há estoque suficiente na Matriz para todos os itens
+                    # POOL: Se origem é MATRIZ, consolida estoque de todas as MATRIZes
+                    is_origin_matriz = order.distributor and order.distributor.tipo_unidade == 'MATRIZ'
+                    if is_origin_matriz:
+                        all_matriz = Distributor.objects.filter(tipo_unidade='MATRIZ', is_active=True)
                     for item in order.items.all():
-                        try:
-                            # Tentar obter estoque da Matriz (order.distributor)
-                            matrix_stock = ProductStock.objects.get(product=item.product, distributor=order.distributor)
-                            if matrix_stock.current_stock < item.quantity:
-                                raise ValueError(f"Estoque insuficiente na Sede para o produto {item.product.name}. Disponível: {matrix_stock.current_stock}, Necessário: {item.quantity}")
-                        except ProductStock.DoesNotExist:
-                            raise ValueError(f"Produto {item.product.name} não encontrado no estoque da Sede.")
+                        if is_origin_matriz:
+                            total_stock = ProductStock.objects.filter(
+                                product=item.product, distributor__in=all_matriz
+                            ).aggregate(total=Sum('current_stock'))['total'] or 0
+                            if total_stock < item.quantity:
+                                raise ValueError(f"Estoque insuficiente na Sede para o produto {item.product.name}. Disponível: {total_stock}, Necessário: {item.quantity}")
+                        else:
+                            try:
+                                matrix_stock = ProductStock.objects.get(product=item.product, distributor=order.distributor)
+                                if matrix_stock.current_stock < item.quantity:
+                                    raise ValueError(f"Estoque insuficiente na Sede para o produto {item.product.name}. Disponível: {matrix_stock.current_stock}, Necessário: {item.quantity}")
+                            except ProductStock.DoesNotExist:
+                                raise ValueError(f"Produto {item.product.name} não encontrado no estoque da Sede.")
 
                 # Se passou pela verificação, validar o pagamento
                 settlement.is_validated = True
@@ -609,31 +630,50 @@ def approve_settlement(request, pk):
                     order.payment_status = PaymentStatus.TOTAL
                     
                     # Realizar transferência de estoque
+                    all_matriz_dists = Distributor.objects.filter(tipo_unidade='MATRIZ', is_active=True) if is_origin_matriz else None
                     for item in order.items.all():
-                        # 1. Decrementar da Matriz
-                        matrix_stock = ProductStock.objects.get(product=item.product, distributor=order.distributor)
-                        previous_matrix = matrix_stock.current_stock
-                        matrix_stock.current_stock -= item.quantity
-                        matrix_stock.save()
+                        # 1. Decrementar do Pool de MATRIZes (FIFO por validade)
+                        if is_origin_matriz:
+                            matriz_stocks = ProductStock.objects.filter(
+                                product=item.product, distributor__in=all_matriz_dists, current_stock__gt=0
+                            ).order_by('expiration_date', 'updated_at')
+                        else:
+                            matriz_stocks = ProductStock.objects.filter(
+                                product=item.product, distributor=order.distributor, current_stock__gt=0
+                            ).order_by('expiration_date', 'updated_at')
+
+                        remaining = item.quantity
+                        for matrix_stock in matriz_stocks:
+                            if remaining <= 0:
+                                break
+                            deduct = min(matrix_stock.current_stock, remaining)
+                            previous_matrix = matrix_stock.current_stock
+                            matrix_stock.current_stock -= deduct
+                            matrix_stock.save()
+                            remaining -= deduct
+
+                            # Log Saída Matriz
+                            StockMovement.objects.create(
+                                distributor=matrix_stock.distributor,
+                                product=item.product,
+                                movement_type=StockMovementType.TRANSFER_OUT,
+                                quantity=deduct,
+                                previous_stock=previous_matrix,
+                                new_stock=matrix_stock.current_stock,
+                                reason=f"Gerado automaticamente pela liquidação do Pedido #{order.order_number}",
+                                reference_id=order.id,
+                                reference_type='order',
+                                user=request.user
+                            )
                         
-                        # Log Saída Matriz
-                        StockMovement.objects.create(
-                            distributor=order.distributor,
-                            product=item.product,
-                            movement_type=StockMovementType.TRANSFER_OUT,
-                            quantity=item.quantity,
-                            previous_stock=previous_matrix,
-                            new_stock=matrix_stock.current_stock,
-                            reason=f"Gerado automaticamente pela liquidação do Pedido #{order.order_number}",
-                            reference_id=order.id,
-                            reference_type='order',
-                            user=request.user
-                        )
+                        # (Log Saída Matriz já feito dentro do loop acima)
                         
-                        # 2. Incrementar na Filial
+                        # 2. Incrementar na Filial (com batch único de transferência)
+                        transfer_batch = f'TRANSF-{order.order_number}'
                         filial_stock, created = ProductStock.objects.get_or_create(
                             product=item.product,
                             distributor=order.target_distributor,
+                            batch=transfer_batch,
                             defaults={'current_stock': 0}
                         )
                         previous_filial = filial_stock.current_stock
@@ -646,6 +686,7 @@ def approve_settlement(request, pk):
                             product=item.product,
                             movement_type=StockMovementType.TRANSFER_IN,
                             quantity=item.quantity,
+                            batch=transfer_batch,
                             previous_stock=previous_filial,
                             new_stock=filial_stock.current_stock,
                             reason=f"Gerado automaticamente pela liquidação do Pedido #{order.order_number}",

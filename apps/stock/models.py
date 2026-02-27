@@ -15,6 +15,8 @@ class StockMovementType(models.TextChoices):
     TRANSFER_IN = 'transfer_in', _('Entrada por Transferência')
 
 
+from apps.products.models import ActiveManager
+
 class StockMovement(models.Model):
     """
     Modelo para movimentações de estoque.
@@ -43,7 +45,6 @@ class StockMovement(models.Model):
     quantity = models.IntegerField(_('Quantidade'))
     previous_stock = models.IntegerField(_('Estoque Anterior'))
     new_stock = models.IntegerField(_('Novo Estoque'))
-    new_stock = models.IntegerField(_('Novo Estoque'))
     batch = models.CharField(_('Lote'), max_length=50, null=True, blank=True)
     expiration_date = models.DateField(_('Data de Validade'), null=True, blank=True)
     reason = models.TextField(_('Motivo'))
@@ -60,6 +61,7 @@ class StockMovement(models.Model):
         blank=True,
         help_text=_('order, transfer, adjustment, etc.')
     )
+    is_active = models.BooleanField(_('Ativo (Soft Delete)'), default=True)
     user = models.ForeignKey(
         'authentication.User',
         on_delete=models.PROTECT,
@@ -68,11 +70,19 @@ class StockMovement(models.Model):
     )
     created_at = models.DateTimeField(_('Criado em'), auto_now_add=True)
 
+    objects = ActiveManager()
+    all_objects = models.Manager()
+
     class Meta:
         db_table = 'stock_movements'
         verbose_name = _('Movimentação de Estoque')
         verbose_name_plural = _('Movimentações de Estoque')
         ordering = ['-created_at']
+
+    def delete(self, using=None, keep_parents=False):
+        """Soft delete: apenas marca como inativo"""
+        self.is_active = False
+        self.save()
 
     def __str__(self):
         distributor_name = self.distributor.name if self.distributor else "N/A"

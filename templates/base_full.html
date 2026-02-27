@@ -22,10 +22,13 @@
     {% block extra_head %}
     <style>
         @keyframes pulse-blue {
-            0%, 100% {
+
+            0%,
+            100% {
                 transform: scale(1);
                 opacity: 0.5;
             }
+
             50% {
                 transform: scale(1.5);
                 opacity: 0;
@@ -43,7 +46,8 @@
             position: absolute;
             width: 100%;
             height: 100%;
-            background-color: #3b82f6; /* blue-500 */
+            background-color: #3b82f6;
+            /* blue-500 */
             border-radius: 9999px;
             animation: pulse-blue 2s infinite;
             z-index: -1;
@@ -58,10 +62,12 @@
             inset: 0;
             background-color: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(5px);
-            z-index: 9998; /* Abaixo do modal */
+            z-index: 9998;
+            /* Abaixo do modal */
             opacity: 0;
             transition: opacity 0.3s ease-in-out;
-            display: none; /* Começa oculto */
+            display: none;
+            /* Começa oculto */
         }
 
         .modal-backdrop.active {
@@ -81,7 +87,8 @@
             width: 90%;
             max-width: 48rem;
             max-height: 90vh;
-            display: none; /* Começa oculto */
+            display: none;
+            /* Começa oculto */
             opacity: 0;
             transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
             display: flex;
@@ -93,14 +100,19 @@
             opacity: 1;
             transform: translate(-50%, -50%) scale(1);
         }
-        
+
         .modal-body {
             overflow-y: auto;
         }
 
         @keyframes shimmer {
-            0% { background-position: -1000px 0; }
-            100% { background-position: 1000px 0; }
+            0% {
+                background-position: -1000px 0;
+            }
+
+            100% {
+                background-position: 1000px 0;
+            }
         }
 
         .skeleton-loader {
@@ -117,28 +129,43 @@
             overflow-y: auto;
             /* Ajuste de scroll fino para o menu se houver muitos itens */
         }
-        .sidebar-fixo::-webkit-scrollbar { width: 4px; }
-        .sidebar-fixo::-webkit-scrollbar-thumb { background: #4B3621; }
 
-        .nav-link, .nav-sublink {
-            font-size: 0.85rem !important; /* Diminui levemente a fonte */
-            white-space: nowrap !important; /* Impede que o texto pule para a linha de baixo */
-            overflow: hidden;
-            text-overflow: ellipsis; /* Caso o nome seja muito longo, ele coloca "..." no final em vez de quebrar */
-            padding-left: 0.75rem !important;
-            padding-right: 0.75rem !important;
-            gap: 0.5rem !important; /* Diminui o espaço entre o ícone e o texto */
+        .sidebar-fixo::-webkit-scrollbar {
+            width: 4px;
         }
 
-        .nav-link.active, .nav-sublink.active {
+        .sidebar-fixo::-webkit-scrollbar-thumb {
+            background: #4B3621;
+        }
+
+        .nav-link,
+        .nav-sublink {
+            font-size: 0.85rem !important;
+            /* Diminui levemente a fonte */
+            white-space: nowrap !important;
+            /* Impede que o texto pule para a linha de baixo */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            /* Caso o nome seja muito longo, ele coloca "..." no final em vez de quebrar */
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+            gap: 0.5rem !important;
+            /* Diminui o espaço entre o ícone e o texto */
+        }
+
+        .nav-link.active,
+        .nav-sublink.active {
             background-color: rgba(255, 255, 255, 0.1);
         }
 
         @media (max-height: 768px) {
-            .nav-link, .nav-sublink {
+
+            .nav-link,
+            .nav-sublink {
                 padding-top: 0.35rem !important;
                 padding-bottom: 0.35rem !important;
             }
+
             .nav-section-toggle {
                 padding-top: 0.5rem !important;
                 padding-bottom: 0.5rem !important;
@@ -231,46 +258,82 @@
                 </div>
                 {% endif %}
 
-                <div
-                    style="font-size: 0.75rem; font-weight: 700; color: #78350F; margin-top: 1rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; padding-left: 0.75rem;">
-                    Operação</div>
-                <a href="/stock/movements/" class="nav-link {% if 'stock' in request.path and 'movements' in request.path %}active{% endif %}">
-                    <i data-lucide="arrow-left-right"></i> Estoque
-                </a>
-                <a href="{% url 'inventory_report' %}" class="nav-link {% if 'reports/inventory' in request.path %}active{% endif %}">
-                    <i data-lucide="clipboard-list"></i> Rel. de Inventário
-                </a>
-                <a href="/orders/" class="nav-link {% if 'orders' in request.path %}active{% endif %}">
-                    <i data-lucide="shopping-cart"></i> Pedidos
-                </a>
-                <a href="{% url 'settlement_list' %}" class="nav-link {% if 'financeiro' in request.path %}active{% endif %}">
-                    <i data-lucide="dollar-sign"></i> Prestação de Contas
-                    {% if pending_payments_count and pending_payments_count > 0 %}
-                    <span style="background-color: #f59e0b; color: white; border-radius: 9999px; padding: 0.125rem 0.375rem; font-size: 0.75rem; font-weight: 700; margin-left: auto;">
-                        {{ pending_payments_count }}
-                    </span>
-                    {% endif %}
-                </a>
+                <!-- Operação Collapsible Section -->
+                <div class="nav-section" style="margin-top: 0.5rem;">
+                    <button class="nav-section-toggle" onclick="toggleSection('operacao')"
+                        style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: 2px; color: #F3E5AB; font-weight: 600; background: none; border: none; width: 100%; cursor: pointer; font-size: 0.875rem; transition: all 0.2s;">
+                        <i data-lucide="activity"></i>
+                        <span>Operação</span>
+                        <i data-lucide="chevron-down" class="chevron" id="operacao-chevron"
+                            style="margin-left: auto; transition: transform 0.3s ease; width: 16px; height: 16px;"></i>
+                    </button>
+                    <div class="nav-submenu" id="operacao-submenu"
+                        style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; padding-left: 1rem;">
+                        <a href="/stock/movements/"
+                            class="nav-sublink {% if 'stock' in request.path and 'movements' in request.path %}active{% endif %}"
+                            style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem; border-radius: 2px; color: #A3A3A3; font-weight: 500; font-size: 0.8125rem; transition: all 0.2s; margin-top: 0.25rem;">
+                            <i data-lucide="arrow-left-right" style="width: 16px; height: 16px;"></i> Estoque
+                        </a>
+                        <a href="{% url 'inventory_report' %}"
+                            class="nav-sublink {% if 'reports/inventory' in request.path %}active{% endif %}"
+                            style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem; border-radius: 2px; color: #A3A3A3; font-weight: 500; font-size: 0.8125rem; transition: all 0.2s; margin-top: 0.25rem;">
+                            <i data-lucide="clipboard-list" style="width: 16px; height: 16px;"></i> Rel. de Inventário
+                        </a>
+                        <a href="/orders/" class="nav-sublink {% if 'orders' in request.path %}active{% endif %}"
+                            style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem; border-radius: 2px; color: #A3A3A3; font-weight: 500; font-size: 0.8125rem; transition: all 0.2s; margin-top: 0.25rem;">
+                            <i data-lucide="shopping-cart" style="width: 16px; height: 16px;"></i> Pedidos
+                        </a>
+                        <a href="{% url 'settlement_list' %}"
+                            class="nav-sublink {% if 'financeiro' in request.path %}active{% endif %}"
+                            style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem; border-radius: 2px; color: #A3A3A3; font-weight: 500; font-size: 0.8125rem; transition: all 0.2s; margin-top: 0.25rem;">
+                            <i data-lucide="dollar-sign" style="width: 16px; height: 16px;"></i> Prestação de Contas
+                            {% if pending_payments_count and pending_payments_count > 0 %}
+                            <span
+                                style="background-color: #f59e0b; color: white; border-radius: 9999px; padding: 0.125rem 0.375rem; font-size: 0.75rem; font-weight: 700; margin-left: auto;">
+                                {{ pending_payments_count }}
+                            </span>
+                            {% endif %}
+                        </a>
+                    </div>
+                </div>
 
                 {% if user.is_superuser or user.distributor.tipo_unidade == 'MATRIZ' %}
-                <div
-                    style="margin-top: 2rem; padding: 0 0.75rem; font-size: 0.75rem; font-weight: 700; color: #a3a3a3;">
-                    ADMINISTRAÇÃO</div>
-                <a href="/admin/" class="nav-link" hx-boost="false">
-                    <i data-lucide="settings"></i> Django Admin
-                </a>
-                <a href="{% url 'financial_audit_list' %}" class="nav-link {% if 'matriz/auditoria' in request.path %}active{% endif %}">
-                    <i data-lucide="clipboard-list"></i> Auditoria
-                    {% if pending_approvals_count and pending_approvals_count > 0 %}
-                    <span style="background-color: #ef4444; color: white; border-radius: 9999px; padding: 0.125rem 0.375rem; font-size: 0.75rem; font-weight: 700; margin-left: auto;">
-                        {{ pending_approvals_count }}
-                    </span>
-                    {% endif %}
-                </a>
-                <a href="{% url 'financial_closure_report' %}" class="nav-link {% if 'relatorios/fechamento' in request.path %}active{% endif %}" hx-boost="false">
-                    <i data-lucide="pie-chart"></i> Fechamento de Caixa
-                </a>
+                <!-- Administração Collapsible Section -->
+                <div class="nav-section" style="margin-top: 0.5rem;">
+                    <button class="nav-section-toggle" onclick="toggleSection('administracao')"
+                        style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: 2px; color: #F3E5AB; font-weight: 600; background: none; border: none; width: 100%; cursor: pointer; font-size: 0.875rem; transition: all 0.2s;">
+                        <i data-lucide="shield"></i>
+                        <span>Administração</span>
+                        <i data-lucide="chevron-down" class="chevron" id="administracao-chevron"
+                            style="margin-left: auto; transition: transform 0.3s ease; width: 16px; height: 16px;"></i>
+                    </button>
+                    <div class="nav-submenu" id="administracao-submenu"
+                        style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; padding-left: 1rem;">
+                        <a href="/admin/" class="nav-sublink" hx-boost="false"
+                            style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem; border-radius: 2px; color: #A3A3A3; font-weight: 500; font-size: 0.8125rem; transition: all 0.2s; margin-top: 0.25rem;">
+                            <i data-lucide="settings" style="width: 16px; height: 16px;"></i> Django Admin
+                        </a>
+                        <a href="{% url 'financial_audit_list' %}"
+                            class="nav-sublink {% if 'matriz/auditoria' in request.path %}active{% endif %}"
+                            style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem; border-radius: 2px; color: #A3A3A3; font-weight: 500; font-size: 0.8125rem; transition: all 0.2s; margin-top: 0.25rem;">
+                            <i data-lucide="clipboard-list" style="width: 16px; height: 16px;"></i> Auditoria
+                            {% if pending_approvals_count and pending_approvals_count > 0 %}
+                            <span
+                                style="background-color: #ef4444; color: white; border-radius: 9999px; padding: 0.125rem 0.375rem; font-size: 0.75rem; font-weight: 700; margin-left: auto;">
+                                {{ pending_approvals_count }}
+                            </span>
+                            {% endif %}
+                        </a>
+                        <a href="{% url 'financial_closure_report' %}"
+                            class="nav-sublink {% if 'relatorios/fechamento' in request.path %}active{% endif %}"
+                            hx-boost="false"
+                            style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem; border-radius: 2px; color: #A3A3A3; font-weight: 500; font-size: 0.8125rem; transition: all 0.2s; margin-top: 0.25rem;">
+                            <i data-lucide="pie-chart" style="width: 16px; height: 16px;"></i> Fechamento de Caixa
+                        </a>
+                    </div>
+                </div>
                 {% endif %}
+
             </nav>
 
             <div class="sidebar-footer" style="padding: 1rem; border-top: 1px solid var(--sidebar-border);">
@@ -358,10 +421,18 @@
         document.addEventListener('htmx:afterSwap', function () {
             lucide.createIcons();
             // Update active classes on sidebar
+            const currentPath = window.location.pathname;
             document.querySelectorAll('.nav-link, .nav-sublink').forEach(link => {
                 link.classList.remove('active');
-                if (link.getAttribute('href') === window.location.pathname ||
-                    (link.getAttribute('href') !== '/' && window.location.pathname.startsWith(link.getAttribute('href')))) {
+                const href = link.getAttribute('href');
+                if (!href) return;
+                // Exact match OR starts-with only for non-root, non-shared prefixes
+                // Avoid false positives: /orders/ should not match /orders/matriz/.../
+                const isExact = href === currentPath;
+                // Only use startsWith if the next char after href is NOT alphanumeric (prevents /orders/ matching /orders/matriz)
+                const hrefTrailingSlash = href.endsWith('/') ? href : href + '/';
+                const isSubpath = href !== '/' && currentPath.startsWith(hrefTrailingSlash) && !currentPath.substring(hrefTrailingSlash.length).includes('/');
+                if (isExact || isSubpath) {
                     link.classList.add('active');
                 }
             });
