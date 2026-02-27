@@ -5,6 +5,7 @@ Django settings for config project.
 from pathlib import Path
 from decouple import config
 from datetime import timedelta
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -16,7 +17,13 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-in-produc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,testserver').split(',')
+# Configuração de Hosts permitidos para o Servidor Local
+ALLOWED_HOSTS = [
+    host.strip() for host in config(
+        'ALLOWED_HOSTS', 
+        default='192.168.100.70,localhost,127.0.0.1,testserver'
+    ).split(',')
+]
 
 
 # Application definition
@@ -28,6 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
     
     # Third party apps
     'rest_framework',
@@ -76,6 +84,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'apps.core.context_processors.simulator_context',
+                'apps.core.context_processors.audit_context',
+                'apps.core.context_processors.filial_context',
             ],
         },
     },
@@ -171,12 +181,22 @@ SIMPLE_JWT = {
 
 
 # CORS Settings
-CORS_ALLOWED_ORIGINS = config(
-    'CORS_ALLOWED_ORIGINS',
-    default='http://localhost:5173,http://127.0.0.1:5173'
-).split(',')
+CORS_ALLOWED_ORIGINS = [
+    origin.strip() for origin in config(
+        'CORS_ALLOWED_ORIGINS',
+        default='http://localhost:5173,http://127.0.0.1:5173,http://192.168.100.70:8031'
+    ).split(',')
+]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# Segurança CSRF para requisições via IP na rede (HTMX)
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip() for origin in config(
+        'CSRF_TRUSTED_ORIGINS',
+        default='http://192.168.100.70:8031'
+    ).split(',')
+]
 
 
 # DRF Spectacular (OpenAPI/Swagger)
@@ -191,4 +211,3 @@ SPECTACULAR_SETTINGS = {
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
-

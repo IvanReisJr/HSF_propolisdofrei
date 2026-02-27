@@ -24,6 +24,5 @@ def audit_list(request):
         
     context = {
         'logs': logs[:100], # Limit to last 100 for performance
-        'actions': AuditLog.objects.values_list('action', flat=True).distinct(),
     }
     return render(request, 'audit/audit_list.html', context)

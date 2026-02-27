@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q, Sum, F, Count
+from django.db.models import Q, Sum, F, Count, DecimalField
 from django.db.models.functions import TruncDate
 from django.utils import timezone
 from datetime import timedelta
@@ -122,7 +122,7 @@ def dashboard(request):
                 ).values(
                     'product__category__name'
                 ).annotate(
-                    total_value=Sum(F('current_stock') * F('product__cost_price'))
+                    total_value=Sum(F('current_stock') * F('product__cost_price'), output_field=DecimalField())
                 ).order_by('-total_value')
                 
                 movements = StockMovement.objects.filter(
@@ -186,7 +186,7 @@ def dashboard(request):
                 ).values(
                     'product__category__name'
                 ).annotate(
-                    total_value=Sum(F('current_stock') * F('product__cost_price'))
+                    total_value=Sum(F('current_stock') * F('product__cost_price'), output_field=DecimalField())
                 ).order_by('-total_value')
                 
                 movements = StockMovement.objects.filter(

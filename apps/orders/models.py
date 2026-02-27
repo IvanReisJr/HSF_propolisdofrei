@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from decimal import Decimal
 from apps.core.models import Sequence  # Import Sequence
+from django.utils.text import slugify
 
 
 class OrderStatus(models.TextChoices):
@@ -13,6 +14,22 @@ class OrderStatus(models.TextChoices):
     CONFIRMADO = 'confirmado', _('Confirmado')
     CANCELADO = 'cancelado', _('Cancelado')
     ENTREGUE = 'entregue', _('Entregue')
+
+
+class PaymentCondition(models.TextChoices):
+    """Condição de Pagamento"""
+    VISTA = 'vista', _('À Vista')
+    PRAZO = 'prazo', _('À Prazo')
+    CONSIGNADO = 'consignado', _('Consignado')
+    DOACAO = 'doacao', _('Doação')
+
+
+class PaymentStatus(models.TextChoices):
+    """Status do Pagamento"""
+    PENDENTE = 'pendente', _('Pendente')
+    PARCIAL = 'parcial', _('Parcial')
+    TOTAL = 'total', _('Total')
+    ISENTO = 'isento', _('Isento')
 
 
 class Order(models.Model):
@@ -50,6 +67,18 @@ class Order(models.Model):
         choices=OrderStatus.choices,
         default=OrderStatus.PENDENTE
     )
+    payment_condition = models.CharField(
+        _('Condição de Pagamento'),
+        max_length=20,
+        choices=PaymentCondition.choices,
+        default=PaymentCondition.VISTA
+    )
+    payment_status = models.CharField(
+        _('Status do Pagamento'),
+        max_length=20,
+        choices=PaymentStatus.choices,
+        default=PaymentStatus.PENDENTE
+    )
     total_amount = models.DecimalField(
         _('Valor Total'),
         max_digits=12,
@@ -68,6 +97,25 @@ class Order(models.Model):
 
     def __str__(self):
         return f"{self.order_number} - {self.distributor.name if self.distributor else 'N/A'}"
+        
+    @property
+    def total_submitted(self):
+        """Soma de todos os AccountSettlement (Pendentes + Validados)"""
+        return self.settlements.aggregate(
+            total=models.Sum('value_reported')
+        )['total'] or Decimal('0.00')
+
+    @property
+    def total_confirmed(self):
+        """Soma apenas dos AccountSettlement com is_validated=True"""
+        return self.settlements.filter(is_validated=True).aggregate(
+            total=models.Sum('value_reported')
+        )['total'] or Decimal('0.00')
+        
+    @property
+    def pending_balance(self):
+        """Calcula o saldo devedor: Total - Total Enviado (para evitar duplicidade)"""
+        return self.total_amount - self.total_submitted
 
     def save(self, *args, **kwargs):
         if not self.order_number:
@@ -117,3 +165,56 @@ class OrderItem(models.Model):
         """Calcula o total_price automaticamente"""
         self.total_price = self.quantity * self.unit_price
         super().save(*args, **kwargs)
+
+
+def settlement_file_path(instance, filename):
+    # media/prestacao_contas/[slug-da-filial]/[ANO]/[MES]/[DIA]/comprovante_pedido_[ID].ext
+    ext = filename.split('.')[-1]
+    distributor_slug = slugify(instance.order.target_distributor.name) if instance.order.target_distributor else 'geral'
+    now = timezone.now()
+    return f'prestacao_contas/{distributor_slug}/{now.year}/{now.month:02d}/{now.day:02d}/comprovante_pedido_{instance.order.id}.{ext}'
+
+
+class AccountSettlement(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name='settlements',
+        verbose_name=_('Pedido')
+    )
+    value_reported = models.DecimalField(
+        _('Valor Informado'),
+        max_digits=12,
+        decimal_places=2
+    )
+    receipt_file = models.FileField(
+        _('Comprovante'),
+        upload_to=settlement_file_path
+    )
+    is_validated = models.BooleanField(
+        _('Validado'),
+        default=False
+    )
+    validated_by = models.ForeignKey(
+        'authentication.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='validated_settlements',
+        verbose_name=_('Validado por')
+    )
+    rejection_reason = models.TextField(
+        _('Motivo da Recusa'),
+        blank=True,
+        null=True
+    )
+    created_at = models.DateTimeField(_('Enviado em'), auto_now_add=True)
+
+    class Meta:
+        verbose_name = _('Prestação de Conta')
+        verbose_name_plural = _('Prestações de Contas')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Pagamento - {self.order.order_number}"

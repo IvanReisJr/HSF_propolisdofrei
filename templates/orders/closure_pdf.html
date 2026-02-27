@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Fechamento de Caixa</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+            @frame footer_frame {
+                -pdf-frame-content: footer_content;
+                bottom: 1cm;
+                margin-left: 2cm;
+                margin-right: 2cm;
+                height: 1cm;
+            }
+        }
+        body {
+            font-family: Helvetica, sans-serif;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #D97706; /* Amber-600 */
+            padding-bottom: 10px;
+        }
+        .header h1 {
+            color: #D97706;
+            margin: 0;
+            font-size: 24px;
+        }
+        .header p {
+            margin: 5px 0;
+            color: #666;
+            font-size: 12px;
+        }
+        .summary-box {
+            background-color: #f3f4f6;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .summary-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .summary-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #059669; /* Green-600 */
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #4B5563;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 12px;
+        }
+        th {
+            background-color: #f9fafb;
+            color: #374151;
+            font-weight: bold;
+            text-align: left;
+            padding: 8px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #f3f4f6;
+            color: #4b5563;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .text-center {
+            text-align: center;
+        }
+        #footer_content {
+            text-align: center;
+            font-size: 10px;
+            color: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+    {% load humanize %}
+    
+    <div class="header">
+        <h1>PRÓPOLIS DO FREI</h1>
+        <p>Relatório de Fechamento de Caixa - Matriz</p>
+        <p>Data de Referência: {{ selected_date|date:"d/m/Y" }}</p>
+    </div>
+
+    <div class="summary-box">
+        <div class="summary-title">TOTAL RECEBIDO</div>
+        <div class="summary-value">R$ {{ total_received|floatformat:2|intcomma }}</div>
+    </div>
+
+    <!-- Recebimento por Condição -->
+    <div class="section-title">Recebimento por Forma de Pagamento</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Forma de Pagamento</th>
+                <th class="text-right">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in received_by_condition %}
+            <tr>
+                <td>{{ item.order__payment_condition|default:"Não especificado"|title }}</td>
+                <td class="text-right">R$ {{ item.total|floatformat:2|intcomma }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="2" class="text-center">Nenhum registro.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Recebimento por Filial -->
+    <div class="section-title">Recebimento por Filial</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Filial</th>
+                <th class="text-right">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in received_by_branch %}
+            <tr>
+                <td>{{ item.order__target_distributor__name }}</td>
+                <td class="text-right">R$ {{ item.total|floatformat:2|intcomma }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="2" class="text-center">Nenhum registro.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Detalhamento -->
+    <div class="section-title">Detalhamento dos Pagamentos</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Hora</th>
+                <th>Filial</th>
+                <th>Pedido</th>
+                <th>Validado Por</th>
+                <th class="text-right">Valor</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for settlement in settlements %}
+            <tr>
+                <td>{{ settlement.created_at|date:"H:i" }}</td>
+                <td>{{ settlement.order.target_distributor.name }}</td>
+                <td>#{{ settlement.order.display_id }}</td>
+                <td>{{ settlement.validated_by.get_full_name|default:settlement.validated_by.username }}</td>
+                <td class="text-right">R$ {{ settlement.value_reported|floatformat:2|intcomma }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">Nenhum pagamento validado nesta data.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div id="footer_content">
+        Gerado em {% now "d/m/Y H:i" %} por {{ user.get_full_name|default:user.username }}
+    </div>
+</body>
+</html>

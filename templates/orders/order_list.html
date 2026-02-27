@@ -13,8 +13,8 @@
             <h1 style="font-size: 1.875rem; font-weight: 700;">Pedidos de Distribuição</h1>
             <p style="color: #666;">Controle o envio de produtos para distribuidores e parceiros.</p>
         </div>
-        <a href="{% url 'order_create' %}" class="btn btn-primary" hx-boost="false">
-            <i data-lucide="plus"></i> Novo Pedido
+        <a href="{% url 'order_create' %}" class="btn flex items-center gap-2 bg-amber-600 text-white hover:bg-amber-700 transition-colors shadow-sm" style="border: none;" hx-boost="false">
+            <i data-lucide="plus-circle" style="width: 20px;"></i> Novo Pedido
         </a>
     </div>
 
@@ -40,6 +40,7 @@
                     <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Unidade Origem</th>
                     <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Destino (Filial)</th>
                     <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Total</th>
+                    <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Condição</th>
                     <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Status</th>
                     <th style="padding: 1rem; font-size: 0.875rem; color: #666; text-align: right;">Ações</th>
                 </tr>
@@ -53,6 +54,11 @@
                     <td style="padding: 1rem; color: #666;">{{ order.target_distributor.name }}</td>
                     <td style="padding: 1rem; font-weight: 600;">R$ {{ order.total_amount }}</td>
                     <td style="padding: 1rem;">
+                        <span style="font-size: 0.875rem; color: #4b5563;">
+                            {{ order.get_payment_condition_display }}
+                        </span>
+                    </td>
+                    <td style="padding: 1rem;">
                         <span
                             style="padding: 0.25rem 0.5rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; 
                             background: {% if order.status == 'pendente' %}#fef3c7; color: #92400e{% elif order.status == 'confirmado' %}#dcfce7; color: #166534{% else %}#f3f4f6; color: #1f2937{% endif %};">
@@ -63,6 +69,11 @@
                         <a href="{% url 'order_detail' order.pk %}" class="btn btn-outline p-2">
                             <i data-lucide="eye" style="width: 18px;"></i>
                         </a>
+                        {% if order.status == 'confirmado' and order.payment_condition != 'doacao' and order.pending_balance > 0 %}
+                        <a href="{% url 'upload_settlement' order.pk %}" class="btn btn-outline p-2 hover:bg-green-50 hover:text-green-600 hover:border-green-200" title="Prestar Contas">
+                            <i data-lucide="dollar-sign" style="width: 18px;"></i>
+                        </a>
+                        {% endif %}
                         {% if order.status == 'pendente' or order.status == 'cancelado' %}
                         <a href="{% url 'order_delete' order.pk %}"
                             class="btn btn-outline p-2 hover:bg-red-50 hover:text-red-600 hover:border-red-200"

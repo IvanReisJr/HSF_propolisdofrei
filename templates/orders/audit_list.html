@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Central de Auditoria - Própolis do Frei{% endblock %}
+
+{% block breadcrumbs %}
+<span style="color: #a3a3a3;">Início / Financeiro / </span> <span style="font-weight: 600;">Auditoria</span>
+{% endblock %}
+
+{% block content %}
+<div class="flex-col gap-6">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 style="font-size: 1.875rem; font-weight: 700;">Central de Auditoria</h1>
+            <p style="color: #666;">Validação de prestações de contas enviadas pelas filiais.</p>
+        </div>
+    </div>
+
+    <div class="card" style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border); text-align: left;">
+                    <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Data Envio</th>
+                    <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Filial</th>
+                    <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Pedido</th>
+                    <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Valor Declarado</th>
+                    <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Comprovante</th>
+                    <th style="padding: 1rem; font-size: 0.875rem; color: #666; text-align: right;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for settlement in settlements %}
+                <tr style="border-bottom: 1px solid var(--sidebar-accent);">
+                    <td style="padding: 1rem; font-size: 0.875rem;">{{ settlement.created_at|date:"d/m/Y H:i" }}</td>
+                    <td style="padding: 1rem; font-weight: 600;">{{ settlement.order.target_distributor.name }}</td>
+                    <td style="padding: 1rem;">
+                        <div class="font-mono font-bold">#{{ settlement.order.order_number }}</div>
+                        <div class="text-xs text-gray-500">
+                             Total Pedido: R$ {{ settlement.order.total_amount }}
+                        </div>
+                         <div class="text-xs text-red-500">
+                             Restante: R$ {{ settlement.order.pending_balance }}
+                        </div>
+                    </td>
+                    <td style="padding: 1rem; font-weight: 600;">R$ {{ settlement.value_reported }}</td>
+                    <td style="padding: 1rem;">
+                        {% if settlement.receipt_file %}
+                        <a href="{{ settlement.receipt_file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary flex items-center gap-1 text-xs" title="Ver Comprovante">
+                            <i data-lucide="eye" class="w-4 h-4"></i> Ver
+                        </a>
+                        {% else %}
+                        <span class="text-gray-400 text-xs">Sem arquivo</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1rem; text-align: right;">
+                        <div class="flex items-center justify-end gap-2">
+                            <!-- Approve Button -->
+                            <form action="{% url 'approve_settlement' settlement.pk %}" method="post" onsubmit="return confirm('Deseja realmente validar este pagamento?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn bg-green-600 text-white hover:bg-green-700 border-none shadow-sm flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors">
+                                    <i data-lucide="check" class="w-4 h-4"></i> Aprovar
+                                </button>
+                            </form>
+                            
+                            <!-- Reject Button (Trigger Modal) -->
+                            <button type="button" 
+                                onclick="openRejectModal('{{ settlement.pk }}', '{{ settlement.order.order_number }}')"
+                                class="btn bg-red-600 text-white hover:bg-red-700 border-none shadow-sm flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors">
+                                <i data-lucide="x" class="w-4 h-4"></i> Recusar
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="padding: 3rem; text-align: center; color: #a3a3a3;">
+                        <i data-lucide="check-circle" style="width: 48px; height: 48px; display: block; margin: 0 auto 1rem; opacity: 0.3;"></i>
+                        Tudo certo! Nenhuma pendência de auditoria encontrada.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div id="rejectModal" class="modal-backdrop" onclick="if(event.target === this) closeRejectModal()">
+    <div class="modal-container p-6 w-full max-w-md">
+        <h3 class="text-lg font-bold mb-4 text-gray-900">Recusar Pagamento</h3>
+        <p class="mb-4 text-sm text-gray-600">Informe o motivo da recusa para o pedido <span id="modalOrderNumber" class="font-mono font-bold"></span>.</p>
+        
+        <form id="rejectForm" method="post" action="">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label for="rejection_reason" class="block text-sm font-medium text-gray-700 mb-1">Motivo</label>
+                <textarea name="rejection_reason" id="rejection_reason" rows="3" required
+                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 focus:ring-opacity-50"></textarea>
+            </div>
+            
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="closeRejectModal()" class="btn btn-outline text-gray-700 border-gray-300 hover:bg-gray-50">Cancelar</button>
+                <button type="submit" class="btn bg-red-600 text-white hover:bg-red-700 border-none">Confirmar Recusa</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openRejectModal(settlementId, orderNumber) {
+        const modal = document.getElementById('rejectModal');
+        const form = document.getElementById('rejectForm');
+        const orderSpan = document.getElementById('modalOrderNumber');
+        
+        // Set Action URL dynamically
+        form.action = `/matriz/auditoria/rejeitar/${settlementId}/`;
+        orderSpan.textContent = orderNumber;
+        
+        modal.classList.add('active');
+        document.querySelector('.modal-container').classList.add('active');
+    }
+
+    function closeRejectModal() {
+        const modal = document.getElementById('rejectModal');
+        modal.classList.remove('active');
+        document.querySelector('.modal-container').classList.remove('active');
+    }
+</script>
+{% endblock %}

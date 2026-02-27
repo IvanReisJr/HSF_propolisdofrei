@@ -1,11 +1,18 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import Order, OrderItem
+from django.utils import timezone
+from django.db.models import Sum, Q
+from .models import Order, OrderItem, AccountSettlement, PaymentStatus, PaymentCondition, OrderStatus
+from .forms import SettlementUploadForm
 from apps.products.models import Product, ProductStock
 from apps.distributors.models import Distributor
 from apps.stock.models import StockMovement
 from django.db import transaction
+import traceback
+import logging
+
+logger = logging.getLogger(__name__)
 
 @login_required
 def order_list(request):
@@ -43,6 +50,7 @@ def order_detail(request, pk):
 def order_create(request):
     if request.method == 'POST':
         distributor_id = request.POST.get('distributor')
+        payment_condition = request.POST.get('payment_condition', PaymentCondition.VISTA)
         
         product_ids = request.POST.getlist('products[]')
         quantities = request.POST.getlist('quantities[]')
@@ -74,6 +82,7 @@ def order_create(request):
                     target_distributor=target_distributor, # Target
                     user=request.user,
                     status='pendente',
+                    payment_condition=payment_condition,
                     total_amount=0
                 )
                 
@@ -128,7 +137,8 @@ def order_create(request):
     context = {
         'distributors': distributors,
         'products': products,
-        'target_distributor': request.user.distributor
+        'target_distributor': request.user.distributor,
+        'payment_conditions': PaymentCondition.choices,
     }
     return render(request, 'orders/order_form.html', context)
 
@@ -310,3 +320,381 @@ def order_delete(request, pk):
         
     context = {'order': order}
     return render(request, 'orders/order_confirm_delete.html', context)
+
+@login_required
+def upload_settlement(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    
+    # Security: Ensure user belongs to the same distributor as the order (Target)
+    if not request.user.is_super_user_role():
+        user_distributor = getattr(request.user, 'distributor', None)
+        if not user_distributor or order.target_distributor != user_distributor:
+             messages.error(request, "Você não tem permissão para prestar contas deste pedido.")
+             return redirect('order_list')
+
+    if request.method == 'POST':
+        form = SettlementUploadForm(request.POST, request.FILES, order=order)
+        if form.is_valid():
+            settlement = form.save(commit=False)
+            settlement.order = order
+            settlement.save()
+            
+            # Update Order payment status
+            order.payment_status = PaymentStatus.PENDENTE
+            order.save()
+            
+            messages.success(request, 'Comprovante enviado com sucesso!')
+            return redirect('settlement_list')
+    else:
+        form = SettlementUploadForm(order=order)
+    
+    return render(request, 'orders/upload_settlement.html', {'form': form, 'order': order})
+
+@login_required
+def settlement_list(request):
+    user_distributor = getattr(request.user, 'distributor', None)
+    
+    if request.user.is_super_user_role():
+        settlements = AccountSettlement.objects.all()
+    elif user_distributor:
+        settlements = AccountSettlement.objects.filter(order__target_distributor=user_distributor)
+    else:
+        settlements = AccountSettlement.objects.none()
+        
+    settlements = settlements.select_related('order').order_by('-created_at')
+    
+    return render(request, 'orders/settlement_list.html', {'settlements': settlements})
+
+@login_required
+def pending_payments(request):
+    user_distributor = getattr(request.user, 'distributor', None)
+    if not user_distributor:
+        messages.error(request, "Apenas filiais podem acessar essa área.")
+        return redirect('dashboard')
+    
+    # Orders ready for settlement: Confirmed/Delivered, Not Donation, Payment Pending/Partial
+    orders = Order.objects.filter(
+        target_distributor=user_distributor,
+        status__in=['confirmado', 'entregue'],
+    ).exclude(
+        payment_condition=PaymentCondition.DOACAO
+    ).exclude(
+        payment_status=PaymentStatus.TOTAL
+    ).order_by('-created_at')
+    
+    return render(request, 'orders/pending_payments.html', {'orders': orders})
+
+@login_required
+def audit_list(request):
+    """
+    Lista de aprovações pendentes para a Matriz.
+    """
+    if not request.user.is_superuser and not (hasattr(request.user, 'distributor') and request.user.distributor and request.user.distributor.tipo_unidade == 'MATRIZ'):
+        messages.error(request, "Acesso restrito à Matriz.")
+        return redirect('dashboard')
+        
+    # Filtrar apenas settlements não validados e sem motivo de recusa (pendentes reais)
+    pending_settlements = AccountSettlement.objects.filter(
+        is_validated=False,
+        rejection_reason__isnull=True
+    ).select_related('order', 'order__target_distributor').order_by('created_at')
+    
+    return render(request, 'orders/audit_list.html', {'settlements': pending_settlements})
+
+from django.db import transaction
+from django.db.models import Sum, Q, Value, DecimalField
+from django.db.models.functions import Coalesce
+from django.utils.dateparse import parse_date
+from apps.stock.models import StockMovement, StockMovementType
+from apps.products.models import ProductStock
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+from django.http import HttpResponse
+
+@login_required
+def financial_closure_report(request):
+    """
+    Relatório de Fechamento de Caixa (Matriz).
+    """
+    try:
+        # Verificar permissão: Apenas Staff/Matriz
+        if not request.user.is_superuser and not (hasattr(request.user, 'distributor') and request.user.distributor and request.user.distributor.tipo_unidade == 'MATRIZ'):
+            messages.error(request, "Acesso restrito à Matriz.")
+            return redirect('dashboard')
+            
+        # Data do filtro (padrão: hoje)
+        date_str = request.GET.get('date')
+        if date_str:
+            selected_date = parse_date(date_str)
+        else:
+            selected_date = timezone.now().date()
+            
+        if not selected_date:
+            selected_date = timezone.now().date()
+
+        # Filtro de pagamentos validados na data selecionada (usando created_at como proxy de entrada)
+        settlements = AccountSettlement.objects.filter(
+            is_validated=True,
+            created_at__date=selected_date
+        ).select_related('order', 'order__target_distributor', 'validated_by').order_by('-created_at')
+        
+        # 1. Total Recebido Hoje
+        total_received = settlements.aggregate(
+            total=Coalesce(Sum('value_reported', output_field=DecimalField()), Value(0, output_field=DecimalField()))
+        )['total']
+        
+        # 2. Soma por Condição (Agrupado por PaymentCondition do Pedido)
+        received_by_condition = settlements.values('order__payment_condition').annotate(
+            total=Coalesce(Sum('value_reported', output_field=DecimalField()), Value(0, output_field=DecimalField()))
+        ).order_by('order__payment_condition')
+        
+        # 3. Soma por Filial
+        received_by_branch = settlements.values('order__target_distributor__name').annotate(
+            total=Coalesce(Sum('value_reported', output_field=DecimalField()), Value(0, output_field=DecimalField()))
+        ).order_by('order__target_distributor__name')
+        
+        # 4. Total Pendente Global (Tudo que ainda falta receber)
+        # Pedidos confirmados/entregues que não estão quitados (PaymentStatus.TOTAL) e não são DOACAO
+        # Calcular saldo devedor item a item para precisão
+        orders_pending = Order.objects.exclude(
+            payment_status=PaymentStatus.TOTAL
+        ).exclude(
+            payment_condition=PaymentCondition.DOACAO
+        ).exclude(
+            status__in=[OrderStatus.CANCELADO, OrderStatus.PENDENTE]
+        ).annotate(
+            paid=Coalesce(Sum('settlements__value_reported', filter=Q(settlements__is_validated=True), output_field=DecimalField()), Value(0, output_field=DecimalField()))
+        )
+        
+        total_pending_global = 0
+        for o in orders_pending:
+            paid_amount = o.paid or 0
+            balance = o.total_amount - paid_amount
+            if balance > 0:
+                total_pending_global += balance
+
+        # Determine base template for HTMX
+        base_template = 'base_htmx.html' if request.htmx else 'base_full.html'
+
+        context = {
+            'selected_date': selected_date,
+            'settlements': settlements,
+            'total_received': total_received,
+            'received_by_condition': received_by_condition,
+            'received_by_branch': received_by_branch,
+            'total_pending_global': total_pending_global,
+            'base_template': base_template,
+        }
+        
+        return render(request, 'orders/closure_report.html', context)
+    except Exception as e:
+        logger.error(f"Erro no relatório de fechamento: {str(e)}")
+        traceback.print_exc()
+        messages.error(request, f"Erro interno ao gerar relatório: {str(e)}")
+        return redirect('dashboard')
+
+@login_required
+def export_closure_pdf(request):
+    """
+    Gera PDF do Relatório de Fechamento de Caixa.
+    """
+    try:
+        # Verificar permissão: Apenas Staff/Matriz
+        if not request.user.is_superuser and not (hasattr(request.user, 'distributor') and request.user.distributor and request.user.distributor.tipo_unidade == 'MATRIZ'):
+            messages.error(request, "Acesso restrito à Matriz.")
+            return redirect('dashboard')
+            
+        # Data do filtro (padrão: hoje)
+        date_str = request.GET.get('date')
+        if date_str:
+            selected_date = parse_date(date_str)
+        else:
+            selected_date = timezone.now().date()
+            
+        if not selected_date:
+            selected_date = timezone.now().date()
+
+        # Filtro de pagamentos validados na data selecionada
+        settlements = AccountSettlement.objects.filter(
+            is_validated=True,
+            created_at__date=selected_date
+        ).select_related('order', 'order__target_distributor', 'validated_by').order_by('-created_at')
+        
+        # Totais
+        total_received = settlements.aggregate(
+            total=Coalesce(Sum('value_reported', output_field=DecimalField()), Value(0, output_field=DecimalField()))
+        )['total']
+        
+        received_by_condition = settlements.values('order__payment_condition').annotate(
+            total=Coalesce(Sum('value_reported', output_field=DecimalField()), Value(0, output_field=DecimalField()))
+        ).order_by('order__payment_condition')
+        
+        received_by_branch = settlements.values('order__target_distributor__name').annotate(
+            total=Coalesce(Sum('value_reported', output_field=DecimalField()), Value(0, output_field=DecimalField()))
+        ).order_by('order__target_distributor__name')
+
+        context = {
+            'selected_date': selected_date,
+            'settlements': settlements,
+            'total_received': total_received,
+            'received_by_condition': received_by_condition,
+            'received_by_branch': received_by_branch,
+            'user': request.user,
+        }
+        
+        template_path = 'orders/closure_pdf.html'
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="fechamento_caixa_{selected_date}.pdf"'
+        
+        template = get_template(template_path)
+        html = template.render(context)
+        
+        pisa_status = pisa.CreatePDF(
+            html, dest=response
+        )
+        
+        if pisa_status.err:
+            return HttpResponse('Erro ao gerar PDF <pre>' + html + '</pre>')
+            
+        return response
+    except Exception as e:
+        logger.error(f"Erro ao exportar PDF: {str(e)}")
+        traceback.print_exc()
+        messages.error(request, f"Erro ao gerar PDF: {str(e)}")
+        return redirect('financial_closure_report')
+
+@login_required
+def approve_settlement(request, pk):
+    """
+    Aprova um pagamento.
+    """
+    if not request.user.is_superuser and not (hasattr(request.user, 'distributor') and request.user.distributor and request.user.distributor.tipo_unidade == 'MATRIZ'):
+        messages.error(request, "Acesso negado.")
+        return redirect('dashboard')
+        
+    settlement = get_object_or_404(AccountSettlement, pk=pk)
+    
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                # Atualizar status do pedido
+                order = settlement.order
+                
+                # Calcular novo saldo pendente considerando o pagamento atual como validado
+                current_pending = order.pending_balance
+                if not settlement.is_validated:
+                    # Se ainda não foi validado, subtrai o valor reportado para simular o novo saldo
+                    current_pending -= settlement.value_reported
+                
+                # Se o pagamento quitar o pedido, verificar estoque da Matriz ANTES de validar
+                if current_pending <= 0:
+                    # Verificar se há estoque suficiente na Matriz para todos os itens
+                    for item in order.items.all():
+                        try:
+                            # Tentar obter estoque da Matriz (order.distributor)
+                            matrix_stock = ProductStock.objects.get(product=item.product, distributor=order.distributor)
+                            if matrix_stock.current_stock < item.quantity:
+                                raise ValueError(f"Estoque insuficiente na Sede para o produto {item.product.name}. Disponível: {matrix_stock.current_stock}, Necessário: {item.quantity}")
+                        except ProductStock.DoesNotExist:
+                            raise ValueError(f"Produto {item.product.name} não encontrado no estoque da Sede.")
+
+                # Se passou pela verificação, validar o pagamento
+                settlement.is_validated = True
+                settlement.validated_by = request.user
+                settlement.rejection_reason = None # Limpar recusa se houver
+                settlement.save()
+                
+                # Atualizar status do pedido
+                if current_pending <= 0:
+                    order.payment_status = PaymentStatus.TOTAL
+                    
+                    # Realizar transferência de estoque
+                    for item in order.items.all():
+                        # 1. Decrementar da Matriz
+                        matrix_stock = ProductStock.objects.get(product=item.product, distributor=order.distributor)
+                        previous_matrix = matrix_stock.current_stock
+                        matrix_stock.current_stock -= item.quantity
+                        matrix_stock.save()
+                        
+                        # Log Saída Matriz
+                        StockMovement.objects.create(
+                            distributor=order.distributor,
+                            product=item.product,
+                            movement_type=StockMovementType.TRANSFER_OUT,
+                            quantity=item.quantity,
+                            previous_stock=previous_matrix,
+                            new_stock=matrix_stock.current_stock,
+                            reason=f"Gerado automaticamente pela liquidação do Pedido #{order.order_number}",
+                            reference_id=order.id,
+                            reference_type='order',
+                            user=request.user
+                        )
+                        
+                        # 2. Incrementar na Filial
+                        filial_stock, created = ProductStock.objects.get_or_create(
+                            product=item.product,
+                            distributor=order.target_distributor,
+                            defaults={'current_stock': 0}
+                        )
+                        previous_filial = filial_stock.current_stock
+                        filial_stock.current_stock += item.quantity
+                        filial_stock.save()
+                        
+                        # Log Entrada Filial
+                        StockMovement.objects.create(
+                            distributor=order.target_distributor,
+                            product=item.product,
+                            movement_type=StockMovementType.TRANSFER_IN,
+                            quantity=item.quantity,
+                            previous_stock=previous_filial,
+                            new_stock=filial_stock.current_stock,
+                            reason=f"Gerado automaticamente pela liquidação do Pedido #{order.order_number}",
+                            reference_id=order.id,
+                            reference_type='order',
+                            user=request.user
+                        )
+                    
+                    messages.success(request, f"Pedido {order.order_number} liquidado! Estoque transferido da Sede para {order.target_distributor.name}.")
+                else:
+                    order.payment_status = PaymentStatus.PARCIAL
+                    messages.success(request, f"Pagamento validado. Pedido {order.order_number} parcialmente pago.")
+                
+                order.save()
+                
+        except ValueError as e:
+            messages.error(request, str(e))
+            return redirect('financial_audit_list')
+        except Exception as e:
+            messages.error(request, f"Erro ao processar validação: {str(e)}")
+            return redirect('financial_audit_list')
+            
+        return redirect('financial_audit_list')
+        
+    return redirect('financial_audit_list')
+
+@login_required
+def reject_settlement(request, pk):
+    """
+    Recusa um pagamento.
+    """
+    if not request.user.is_superuser and not (hasattr(request.user, 'distributor') and request.user.distributor and request.user.distributor.tipo_unidade == 'MATRIZ'):
+        messages.error(request, "Acesso negado.")
+        return redirect('dashboard')
+        
+    settlement = get_object_or_404(AccountSettlement, pk=pk)
+    
+    if request.method == 'POST':
+        reason = request.POST.get('rejection_reason')
+        if not reason:
+            messages.error(request, "Informe o motivo da recusa.")
+            return redirect('audit_list')
+            
+        settlement.is_validated = False
+        settlement.validated_by = request.user
+        settlement.rejection_reason = reason
+        settlement.save()
+        
+        messages.warning(request, f"Pagamento recusado. Motivo registrado.")
+        return redirect('financial_audit_list')
+        
+    return redirect('financial_audit_list')

@@ -243,6 +243,14 @@
                 <a href="/orders/" class="nav-link {% if 'orders' in request.path %}active{% endif %}">
                     <i data-lucide="shopping-cart"></i> Pedidos
                 </a>
+                <a href="{% url 'settlement_list' %}" class="nav-link {% if 'financeiro' in request.path %}active{% endif %}">
+                    <i data-lucide="dollar-sign"></i> Prestação de Contas
+                    {% if pending_payments_count and pending_payments_count > 0 %}
+                    <span style="background-color: #f59e0b; color: white; border-radius: 9999px; padding: 0.125rem 0.375rem; font-size: 0.75rem; font-weight: 700; margin-left: auto;">
+                        {{ pending_payments_count }}
+                    </span>
+                    {% endif %}
+                </a>
 
                 {% if user.is_superuser or user.distributor.tipo_unidade == 'MATRIZ' %}
                 <div
@@ -251,8 +259,16 @@
                 <a href="/admin/" class="nav-link" hx-boost="false">
                     <i data-lucide="settings"></i> Django Admin
                 </a>
-                <a href="/audit/logs/" class="nav-link {% if 'audit' in request.path %}active{% endif %}">
+                <a href="{% url 'financial_audit_list' %}" class="nav-link {% if 'matriz/auditoria' in request.path %}active{% endif %}">
                     <i data-lucide="clipboard-list"></i> Auditoria
+                    {% if pending_approvals_count and pending_approvals_count > 0 %}
+                    <span style="background-color: #ef4444; color: white; border-radius: 9999px; padding: 0.125rem 0.375rem; font-size: 0.75rem; font-weight: 700; margin-left: auto;">
+                        {{ pending_approvals_count }}
+                    </span>
+                    {% endif %}
+                </a>
+                <a href="{% url 'financial_closure_report' %}" class="nav-link {% if 'relatorios/fechamento' in request.path %}active{% endif %}" hx-boost="false">
+                    <i data-lucide="pie-chart"></i> Fechamento de Caixa
                 </a>
                 {% endif %}
             </nav>

@@ -25,15 +25,25 @@
                 <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{{ movement.product.name }}</td>
                 <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{{ movement.quantity }}</td>
                 <td class="px-4 py-2 whitespace-nowrap">
-                    {% if movement.movement_type == 'entry' or movement.movement_type == 'adjustment_plus' or movement.movement_type == 'reversal_out' %}
+                    {% if movement.movement_type == 'entry' or movement.movement_type == 'adjustment_plus' or movement.movement_type == 'reversal_out' or movement.movement_type == 'transfer_in' %}
                         <span class="inline-flex items-center gap-1.5 text-green-700">
                             <i data-lucide="arrow-up-circle" class="w-4 h-4"></i>
                             <span class="text-xs font-medium">{{ movement.get_movement_type_display }}</span>
+                            {% if movement.movement_type == 'transfer_in' %}
+                            <span class="px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold border border-blue-200 ml-1" title="Gerado automaticamente pela Matriz">
+                                AUTOMÁTICO
+                            </span>
+                            {% endif %}
                         </span>
                     {% else %}
                         <span class="inline-flex items-center gap-1.5 text-red-700">
                             <i data-lucide="arrow-down-circle" class="w-4 h-4"></i>
                             <span class="text-xs font-medium">{{ movement.get_movement_type_display }}</span>
+                            {% if movement.movement_type == 'transfer_out' %}
+                            <span class="px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold border border-blue-200 ml-1" title="Gerado automaticamente">
+                                AUTOMÁTICO
+                            </span>
+                            {% endif %}
                         </span>
                     {% endif %}
                 </td>

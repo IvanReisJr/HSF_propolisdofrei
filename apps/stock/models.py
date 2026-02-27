@@ -11,6 +11,8 @@ class StockMovementType(models.TextChoices):
     ADJUSTMENT_MINUS = 'adjustment_minus', _('Ajuste (Subtrair)')
     REVERSAL_IN = 'reversal_in', _('Estorno de Entrada')
     REVERSAL_OUT = 'reversal_out', _('Estorno de Saída')
+    TRANSFER_OUT = 'transfer_out', _('Saída por Transferência')
+    TRANSFER_IN = 'transfer_in', _('Entrada por Transferência')
 
 
 class StockMovement(models.Model):

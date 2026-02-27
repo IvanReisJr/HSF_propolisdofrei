@@ -21,19 +21,14 @@
             <input type="text" name="user" value="{{ request.GET.user }}" class="input" style="flex: 1;"
                 placeholder="Filtrar por usuário...">
 
-            <select name="action" class="input" style="width: 200px;">
-                <option value="">Todas Ações</option>
-                {% for action in actions %}
-                <option value="{{ action }}" {% if request.GET.action == action %}selected{% endif %}>{{ action }}
-                </option>
-                {% endfor %}
-            </select>
+            <input type="text" name="action" value="{{ request.GET.action }}" class="input" style="width: 200px;"
+                placeholder="Ação (INSERT, UPDATE...)">
 
             <input type="text" name="resource" value="{{ request.GET.resource }}" class="input" style="width: 200px;"
                 placeholder="Tipo de recurso...">
 
             <button type="submit" class="btn btn-outline">Filtrar</button>
-            <a href="{% url 'audit_list' %}" class="btn btn-outline" title="Limpar">
+            <a href="{% url 'system_audit_logs' %}" class="btn btn-outline" title="Limpar">
                 <i data-lucide="rotate-ccw" style="width: 18px;"></i>
             </a>
         </form>

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load l10n %}
+
+{% block title %}Prestar Contas - Própolis do Frei{% endblock %}
+
+{% block breadcrumbs %}
+<span style="color: #a3a3a3;">Início / Financeiro / </span> <span style="font-weight: 600;">Prestar Contas</span>
+{% endblock %}
+
+{% block content %}
+<div class="flex-col gap-6" style="max-width: 600px; margin: 0 auto;">
+    <div class="flex items-center gap-4">
+        <a href="{% url 'order_list' %}" class="btn btn-outline p-2">
+            <i data-lucide="arrow-left"></i>
+        </a>
+        <h1 style="font-size: 1.875rem; font-weight: 700;">Prestar Contas</h1>
+    </div>
+
+    <div class="card flex-col gap-4">
+        <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <h3 class="font-bold text-lg mb-2">Detalhes do Pedido #{{ order.order_number }}</h3>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                    <p class="text-gray-500">Valor Total</p>
+                    <p class="font-bold text-lg">R$ {{ order.total_amount }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-500">Condição</p>
+                    <p class="font-medium">{{ order.get_payment_condition_display }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-500">Data do Pedido</p>
+                    <p class="font-medium">{{ order.created_at|date:"d/m/Y" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="flex-col gap-6">
+            {% csrf_token %}
+            
+            <div class="flex-col gap-2">
+                <label class="label">Valor Informado (R$)</label>
+                {{ form.value_reported }}
+                {% if form.value_reported.errors %}
+                <p class="text-red-500 text-sm">{{ form.value_reported.errors.0 }}</p>
+                {% endif %}
+                <small style="color: #666; font-size: 0.75rem;">Informe o valor exato do comprovante.</small>
+            </div>
+
+            <div class="flex-col gap-2">
+                <label class="label">Comprovante (PDF ou Imagem)</label>
+                {{ form.receipt_file }}
+                {% if form.receipt_file.errors %}
+                <p class="text-red-500 text-sm">{{ form.receipt_file.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="flex justify-end gap-3 mt-4">
+                <a href="{% url 'order_list' %}" class="btn btn-outline">Cancelar</a>
+                <button type="submit" class="btn btn-primary">
+                    <i data-lucide="upload"></i> Enviar Comprovante
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Minhas Prestações de Contas - Própolis do Frei{% endblock %}
+
+{% block breadcrumbs %}
+<span style="color: #a3a3a3;">Início / Financeiro / </span> <span style="font-weight: 600;">Meus Pagamentos</span>
+{% endblock %}
+
+{% block content %}
+<div class="flex-col gap-6">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 style="font-size: 1.875rem; font-weight: 700;">Prestações de Contas</h1>
+            <p style="color: #666;">Histórico de pagamentos e comprovantes enviados.</p>
+        </div>
+        <a href="{% url 'pending_payments' %}" class="btn btn-primary">
+            <i data-lucide="plus-circle"></i> Prestar Contas
+        </a>
+    </div>
+
+    <div class="card" style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border); text-align: left;">
+                    <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Pedido</th>
+                    <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Valor Informado</th>
+                    <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Comprovante</th>
+                    <th style="padding: 1rem; font-size: 0.875rem; color: #666;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for settlement in settlements %}
+                <tr style="border-bottom: 1px solid var(--sidebar-accent);">
+                    <td style="padding: 1rem;">
+                        <div class="font-mono font-bold">#{{ settlement.order.order_number }}</div>
+                        <div class="text-xs text-gray-500">{{ settlement.order.created_at|date:"d/m/Y" }}</div>
+                        <div class="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-600 border border-gray-100">
+                            {% if settlement.order.pending_balance <= 0 %}
+                            <div class="mb-1">
+                                <span class="px-2 py-0.5 rounded-full bg-green-100 text-green-800 text-[10px] font-bold uppercase">
+                                    Liquidado
+                                </span>
+                            </div>
+                            {% else %}
+                            <div class="mb-1">
+                                <span class="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800 text-[10px] font-bold uppercase">
+                                    Em Aberto
+                                </span>
+                            </div>
+                            {% endif %}
+                            <span class="block"><strong>Total do Pedido:</strong> R$ {{ settlement.order.total_amount }}</span>
+                            <span class="block text-blue-700"><strong>Enviado:</strong> R$ {{ settlement.order.total_submitted }}</span>
+                            <span class="block text-red-700"><strong>Saldo a Pagar:</strong> R$ {{ settlement.order.pending_balance }}</span>
+                        </div>
+                    </td>
+                    <td style="padding: 1rem; font-weight: 600;">R$ {{ settlement.value_reported }}</td>
+                    <td style="padding: 1rem;">
+                        {% if settlement.receipt_file %}
+                        <a href="{{ settlement.receipt_file.url }}" target="_blank" class="flex items-center gap-1 text-primary hover:text-primary-dark">
+                            <i data-lucide="eye" style="width: 16px;"></i> Ver Arquivo
+                        </a>
+                        {% else %}
+                        <span style="color: #a3a3a3;">Sem anexo</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1rem;">
+                        {% if settlement.is_validated %}
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                            Validado
+                        </span>
+                        {% else %}
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                            Pendente
+                        </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="padding: 3rem; text-align: center; color: #a3a3a3;">
+                        <i data-lucide="file-check" style="width: 48px; height: 48px; display: block; margin: 0 auto 1rem; opacity: 0.3;"></i>
+                        Nenhuma prestação de contas encontrada.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

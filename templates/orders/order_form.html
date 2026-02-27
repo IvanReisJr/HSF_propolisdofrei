@@ -85,6 +85,14 @@
 
             <div class="flex justify-end items-center gap-4"
                 style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                <div class="flex-col gap-2" style="flex: 1; max-width: 300px;">
+                    <label class="label">Condição de Pagamento</label>
+                    <select name="payment_condition" class="input" required>
+                        {% for value, label in payment_conditions %}
+                        <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
                 <div style="text-align: right;">
                     <p style="font-size: 0.875rem; color: #666;">Valor Total Estimado</p>
                     <p style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">R$ <span
